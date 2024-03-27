@@ -24,7 +24,7 @@ def DCT_process(matrix, i, j):#DCT公式
 
     return (2. / np.sqrt(height * width)) * c * value
 
-def DCT_process2(matrix):#處理陣列問題
+def DCT(matrix):#主要被呼叫的DCT函式
     width = matrix.shape[1]
     height = matrix.shape[0]
     dct = np.zeros_like(matrix)
@@ -53,7 +53,7 @@ def IDCT_process(dct, i, j):#逆DCT公式
 
    return (2. / np.sqrt(height * width)) * value
 
-def IDCT(dct):#處理陣列問題
+def IDCT(dct):#逆DCT函式
    width = dct.shape[1]
    height = dct.shape[0]
    matrix = np.zeros_like(dct)
@@ -62,19 +62,3 @@ def IDCT(dct):#處理陣列問題
        for row in range(width):
            matrix[col, row] = IDCT_process(dct, col, row)
    return matrix
-
-def DCT(list):#主要DCT，處理資料傳接
-
-    matrix = np.array(list)
-    matrix = matrix.astype(int)
-    dct_array = []
-    '''
-    for y in range(0,np.size(matrix,0)):
-        for x in range(0,np.size(matrix,1)):
-            dct_array.append(DCT_process2(matrix[y][x]))
-    dct_array_np = [np.array(item) for item in dct_array]
-    '''
-    for y in range(0,np.size(matrix,0)):
-        dct_array.append(DCT_process2(matrix[y]))
-    dct_array_np = [np.array(item) for item in dct_array]
-    return dct_array_np

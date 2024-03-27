@@ -40,8 +40,8 @@ YTemp = [[174,172,170,169,170,176,182,186],
          [134,134,136,137,138,141,142,143],
          [133,133,134,134,136,139,140,143]]
 
-DCTU = DCT.DCT_process2(U)
-DCTV = DCT.DCT_process2(V)
+DCTU = DCT.DCT(U)
+DCTV = DCT.DCT(V)
 
 print(DCTU)
 print(DCTV)
