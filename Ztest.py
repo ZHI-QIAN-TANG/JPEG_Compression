@@ -64,5 +64,5 @@ for i in range(len(ACs)):
         RL.append([count, ACs[i]])
         count = 0
 if count != 0:
-    RL.append("EOB")
+    RL.append([0,0])
 print(RL)
