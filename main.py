@@ -1,3 +1,88 @@
+import sys
+import os
+import numpy as np
+import Convert_RGB_to_YUV
+import crop
+import DCT_pro as DCT
+import Quantization as Q
+import Zigzag as Z
+import RLC
+import DPCM
+import Huffman_coding
+
+def generate_encoded_data(image_path):
+    blocks = crop.crop_image_into_8x8_blocks(image_path)
+    URLs = []
+    UDCs = []
+    for i in range(len(blocks)):
+        img = blocks[i]
+        YuvMatrix = np.array([[0.299, 0.587, 0.114],[-0.147, -0.289, 0.436],[0.615, -0.515, -0.100]])
+        zero_channel = Convert_RGB_to_YUV.Creative_Zeros(img)
+        RData,GData,BData = Convert_RGB_to_YUV.Cut_RGB(img,zero_channel)
+        YUV = Convert_RGB_to_YUV.Convert_YUV(img,YuvMatrix)
+        YSpllit,USplist,VSplite,Y,U,V= Convert_RGB_to_YUV.Cut_YUV(YUV)
+
+        DCTU = DCT.DCT(U)
+        DCTV = DCT.DCT(V)
+
+        QY = Q.YQuantization(Y)
+        QU = Q.CbCrQuantization(DCTU)
+        QV = Q.CbCrQuantization(DCTV)
+        
+        YAC = Z.Zigzag(QY.tolist())
+        UAC = Z.Zigzag(QU.tolist())
+        VAC = Z.Zigzag(QV.tolist())
+        
+        YRL = RLC.RLC(YAC)
+        URL = RLC.RLC(UAC)
+        VRL = RLC.RLC(VAC)
+
+        UDCs.append(QU[0][0])
+        URLs.append(URL)
+
+    UDPCM = DPCM.DPCM(UDCs)
+
+    DC,AC,encoded_dc_bitstream,encoded_ac_bitstream,compressed_data,dc_huffman_tree,ac_huffman_tree,decoded_dc_coeffs,decoded_ac_coeffs = Huffman_coding.Huffman_code(UDPCM,URLs)
+
+    # 在這裡將 compressed_data 放入 encoded_data
+    encoded_data = compressed_data
+
+    return encoded_data
+
+def write_jpeg_file(encoded_data, output_file):
+    # 打開輸出檔案
+    with open(output_file, "wb") as f:
+        # 寫入 SOI 標記
+        f.write(b"\xFF\xD8")
+
+        # 寫入 APP0 標記
+        app0_segment = b"\xFF\xE0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
+        f.write(app0_segment)
+
+        # 寫入編碼的資料
+        f.write(encoded_data)
+
+        # 寫入 EOI 標記
+        f.write(b"\xFF\xD9")
+
+def main():
+    if len(sys.argv) != 3:
+        print("Usage: python main.py input_image output_jpeg")
+        sys.exit(1)
+
+    input_image = sys.argv[1]
+    output_jpeg = sys.argv[2]
+
+    # 假設您已經實現了將圖片進行編碼並生成編碼後的資料的函數
+    encoded_data = generate_encoded_data(input_image)
+
+    # 將編碼後的資料寫入 JPEG 檔案中
+    write_jpeg_file(encoded_data, output_jpeg)
+
+if __name__ == "__main__":
+    main()
+
+"""
 import numpy as np #用於數值處理
 import Convert_RGB_to_YUV
 import crop
@@ -6,21 +91,22 @@ import Quantization as Q
 import Zigzag as Z
 import RLC
 import DPCM
+import Huffman_coding
 
-image_path = "test2.jpg" #將圖像進行導入
-blocks = crop.crop_image_into_8x8_blocks(image_path)
-URLs = []
-UDCs = []
+image_path = "C:/Users/USER/Desktop/JEPG2.0/JPEG_Compression-master/test2.jpg" # 將圖像進行導入
+blocks = crop.crop_image_into_8x8_blocks(image_path) # 將圖片分割成8*8的小塊作處理
+URLs = [] # 存Y的所有AC編碼值
+UDCs = [] # 存U的所有DC值
 for i in range(len(blocks)):
-    img = blocks[i] #目前只取第一個圖片塊做處理，後續須透過迴圈處理所有資料
-    YuvMatrix = np.array([[0.299, 0.587, 0.114],[-0.147, -0.289, 0.436],[0.615, -0.515, -0.100]]) #用於將RGB矩陣轉為YUV(Y，Cb,Cr)
-    RgbMatrix = np.array([[1, 0, 1.140],[1, -0.395, -0.581],[1, 2.032, 0]]) #用於將YUV矩陣轉為RGB(R，G,B)
+    img = blocks[i] # 取出8*8的像素
+    YuvMatrix = np.array([[0.299, 0.587, 0.114],[-0.147, -0.289, 0.436],[0.615, -0.515, -0.100]]) # 用於將RGB矩陣轉為YUV(Y，Cb,Cr)
+    RgbMatrix = np.array([[1, 0, 1.140],[1, -0.395, -0.581],[1, 2.032, 0]]) # 用於將YUV矩陣轉為RGB(R，G,B)
 
-    """
+    
     def Calculate_length_and_width(img):
         size = img.shape #計算圖像長與寬
         return size
-    """
+    
 
     def Convert_RGB(YUV):
         YUV[:, :, 1:] -= 128.0
@@ -37,32 +123,43 @@ for i in range(len(blocks)):
     #Convert_RGB_to_YUV.Show_RGB(RData,GData,BData) #顯示RGB三個通道畫面
     #Convert_RGB_to_YUV.Show_YUV(Y,U,V) #顯示YUV三個通道畫面
     #Convert_RGB_to_YUV.Show_Convent_RGB(RGB) #顯示經由轉變過YUV後再轉回RGB的圖像(用來確定有沒有翻轉失誤)
-    YTemp = [[174,172,170,169,170,176,182,186],
-            [171,170,168,168,170,174,180,182],
-            [166,165,165,164,168,170,175,176],
-            [156,156,156,158,161,162,166,167],
-            [146,146,148,149,152,153,156,156],
-            [139,140,140,141,144,146,146,147],
-            [134,134,136,137,138,141,142,143],
-            [133,133,134,134,136,139,140,143]]
 
+    # 二維離散餘弦轉換，將像素值轉換為頻率域的值
     DCTU = DCT.DCT(U)
     DCTV = DCT.DCT(V)
 
+    # 量化處理，壓縮高頻訊號
     QY = Q.YQuantization(Y)
     QU = Q.CbCrQuantization(DCTU)
     QV = Q.CbCrQuantization(DCTV)
-    """
+    
+    # AC值編碼
+    # Z字編碼
     YAC = Z.Zigzag(QY.tolist())
     UAC = Z.Zigzag(QU.tolist())
     VAC = Z.Zigzag(QV.tolist())
-    
+    # RL編碼，回傳值為二維陣列
     YRL = RLC.RLC(YAC)
     URL = RLC.RLC(UAC)
     VRL = RLC.RLC(VAC)
-    """
-    UDCs.append(QU[0][0])
-    #URLs.append(URL)
 
+
+    UDCs.append(QU[0][0])
+    URLs.append(URL)
+
+# U的DC值做DC編碼(DPCM)
 UDPCM = DPCM.DPCM(UDCs)
-print(UDPCM)
+
+DC,AC,encoded_dc_bitstream,encoded_ac_bitstream,compressed_data,dc_huffman_tree,ac_huffman_tree,decoded_dc_coeffs,decoded_ac_coeffs = Huffman_coding.Huffman_code(UDPCM,URLs)
+"""
+
+
+"""
+print("Original DC Coefficients:", DC,'\n')
+print("Original AC Coefficients:", AC,'\n')
+print("Encoded DC Bitstream:", encoded_dc_bitstream,'\n')
+print("Encoded AC Bitstream:", encoded_ac_bitstream,'\n')
+print("Compressed Data:", compressed_data,'\n')
+print("Decoded DC Coefficients:", decoded_dc_coeffs,'\n')
+print("Decoded AC Coefficients:", decoded_ac_coeffs,'\n')
+"""

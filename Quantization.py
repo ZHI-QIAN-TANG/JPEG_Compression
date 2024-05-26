@@ -1,5 +1,7 @@
 import numpy as np
 
+# 量化(原訊號 / Qtable)，返回值為整數
+# Y值量化
 def YQuantization(Y):
     YQuantizationTable = np.array([[16, 11, 10, 16, 24, 41, 51, 61],
                                   [12, 12, 14, 19, 26, 58, 60, 55],
@@ -11,6 +13,7 @@ def YQuantization(Y):
                                   [72, 92, 95, 98, 112, 100, 103, 99]])
     return (Y/YQuantizationTable).astype(int)
 
+# CbCr值量化
 def CbCrQuantization(CbCr):
     CbCrQuantizationTable = np.array([[17, 18, 24, 47, 99, 99, 99, 99],
                                       [18, 21, 26, 66, 99, 99, 99, 99],
