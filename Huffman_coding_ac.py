@@ -21,6 +21,7 @@ def Huffman_code(AC):
         def __lt__(self, other):
             return 0
 
+    #創造霍夫樹
     def create_huffman_tree(frequencies):
         heap = [[weight, [symbol, ""]] for symbol, weight in frequencies.items()]
         heapify(heap)
@@ -34,6 +35,7 @@ def Huffman_code(AC):
             heappush(heap, [lo[0] + hi[0]] + lo[1:] + hi[1:])
         return sorted(heappop(heap)[1:], key=lambda p: (len(p[-1]), p))
 
+    #霍夫曼編碼
     def huffman_encode(data):
         frequencies = Counter(data)
         huffman_tree = create_huffman_tree(frequencies)
@@ -41,6 +43,7 @@ def Huffman_code(AC):
         encoded_data = ''.join(huffman_dict[symbol] for symbol in data)
         return encoded_data, huffman_dict
 
+    #霍夫曼解碼
     def huffman_decode(encoded_data, huffman_dict):
         reverse_huffman_dict = {v: k for k, v in huffman_dict.items()}
         decoded_data = []
@@ -53,26 +56,26 @@ def Huffman_code(AC):
         return decoded_data
 
 
-    # 步骤1：RLE编码数据
-    #print("RLE 编码数据:", AC)
+    # 步骤1：RLE編碼數據
+    #print("RLE 編碼數據:", AC)
 
-    # 扁平化RLE数据以进行Huffman编码
+    # 扁平化RLE數據以進行Huffman編碼
     flat_data = []
     for segment in AC:
         for count, value in segment:
             flat_data.append(count)
             flat_data.append(value)
 
-    # 步骤2：Huffman编码
+    # 步骤2：Huffman編碼
     huffman_encoded_data, huffman_dict = huffman_encode(flat_data)
-    #print("Huffman 编码数据:", huffman_encoded_data)
+    #print("Huffman 編碼數據:", huffman_encoded_data)
     #print("Huffman 字典:", huffman_dict)
 
     # 步骤3：Huffman解码
     huffman_decoded_data = huffman_decode(huffman_encoded_data, huffman_dict)
-    #print("Huffman 解码数据:", huffman_decoded_data)
+    #print("Huffman 解碼數據:", huffman_decoded_data)
 
-    # 从Huffman解码数据重建RLE编码数据
+    # 在Huffman解碼數據重建RLE編碼數據
     reconstructed_rle_encoded_data = []
     segment = []
     for i in range(0, len(huffman_decoded_data), 2):
@@ -83,13 +86,13 @@ def Huffman_code(AC):
             reconstructed_rle_encoded_data.append(segment)
             segment = []
 
-    # 确保所有数据都被处理
+    # 確定數據都被處理
     if segment:
         reconstructed_rle_encoded_data.append(segment)
 
-    #print("重建的RLE编码数据:", reconstructed_rle_encoded_data)
+    #print("重建RLE的數據:", reconstructed_rle_encoded_data)
 
-    # 验证原始数据和解码数据是否相同
+    # 驗證數據是否與原始相同
     #print("数据匹配:", AC == reconstructed_rle_encoded_data)
     
     return huffman_encoded_data, huffman_dict

@@ -55,7 +55,6 @@ def IDCT(dct):  # 逆DCT函式
             matrix[i, j] = IDCT_process(dct, i, j)
 
     return matrix
-
 '''
 #確認答案的部分
 from scipy.fftpack import dct, idct

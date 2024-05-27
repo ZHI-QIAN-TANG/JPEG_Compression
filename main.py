@@ -95,6 +95,7 @@ import RLC
 import DPCM
 import Huffman_coding_ac
 import Huffman_coding_dc
+import AC_DC_tree_DHT
 
 '''
 image_path = "test2.jpg" # 將圖像進行導入
@@ -210,11 +211,16 @@ def generate_encoded_data(image_path):
     UDPCM = DPCM.DPCM(UDCs)
 
     huffman_encoded_data_ac, ac_huffman_tree = Huffman_coding_ac.Huffman_code(URLs)
-    DC,encoded_dc_bitstream,compressed_data,dc_huffman_tree,decoded_dc_coeffs =Huffman_coding_dc.Huffman_code(UDPCM)
+    DC,encoded_dc_bitstream,compressed_data,huffman_tree,decoded_dc_coeffs,dc_huffman_tree =Huffman_coding_dc.Huffman_code(UDPCM)
     compressed_data = encoded_dc_bitstream + huffman_encoded_data_ac
+    ACDCDHT = AC_DC_tree_DHT.AC_DC_tree_DHT(dc_huffman_tree,ac_huffman_tree)
+
+    # print("ac_huffman_tree = " ,ac_huffman_tree)
+    # print("dc_huffman_tree = " ,dc_huffman_tree)
 
     ##需要進入標頭的內容:
-    #compressed_data、dc_huffman_tree、ac_huffman_tree
+    #compressed_data = 為ACDC的二元流碼
+    #ACDCDHT = 為ACDC的霍夫碼標頭資料
 
     return compressed_data
 

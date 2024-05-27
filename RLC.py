@@ -8,16 +8,16 @@ def RLC(ACs):
         if ACs[i] == 0:
             count += 1
             if count == 16:
-                RL.append([15, 0])  # 16个0视为一个ZRL
+                RL.append([15, 0])  # 16個0視為一個ZRL
                 count = 0
         else:
-            while count > 15:  # 如果有超过15个连续的零
-                RL.append([15, 0])  # 添加一个ZRL
+            while count > 15:  # 如果有超過15個0
+                RL.append([15, 0])  # 填加一個ZRL
                 count -= 16
             RL.append([count, ACs[i]])
             count = 0
     
-    # 结束时添加EOB标志
+    # 結束時填加EOB標誌
     if count != 0:
         RL.append([0, 0])
     

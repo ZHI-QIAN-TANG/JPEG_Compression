@@ -2,17 +2,17 @@ import numpy as np
 from bitstring import BitStream, ReadError
 
 def Huffman_code(DC):
-    # 将DC
+    #進行資料改變
     DC = np.array(DC, dtype=np.int32)
     
-    # 创建节点
+    #產生節點
     class Node:
         def __init__(self, value=None):
             self.value = value
             self.left = None
             self.right = None
-
-    # 用于建立霍夫曼树(使用节点进行处理)
+    
+    #建立霍夫曼樹
     def build_huffman_tree(huffman_table):
         root = Node()
         for value, code in huffman_table.items():
@@ -28,8 +28,8 @@ def Huffman_code(DC):
                     current_node = current_node.right
             current_node.value = value
         return root
-
-    # 用于解码
+    
+    #進行DC解碼用
     def decode_huffman_code(bitstream, root):
         current_node = root
         while current_node.value is None:
@@ -40,47 +40,42 @@ def Huffman_code(DC):
                 current_node = current_node.right
         return current_node.value
 
-    # DC的霍夫曼表
+    #DC的霍夫編碼表
     dc_huffman_table = {
         0: '00', 1: '010', 2: '011', 3: '100', 4: '101', 5: '110',
         6: '1110', 7: '11110', 8: '111110', 9: '1111110', 10: '11111110', 11: '111111110'
     }
 
-    # 进行DC差值计算
+    #進行DC係數
     def encode_dc_coefficient(dc_coeff):
         dc_coeff = int(dc_coeff)
         magnitude = abs(dc_coeff)
         size = magnitude.bit_length()
 
-        # 获取霍夫曼编码
         huffman_code = dc_huffman_table[size]
 
-        # 获取补码表示
         if dc_coeff < 0:
             magnitude = (1 << size) - 1 + dc_coeff
 
-        # 去掉前缀
         magnitude_bin = bin(magnitude)[2:].zfill(size)
         return huffman_code + magnitude_bin
 
-    # 获取DC系数
+    
     dc_coefficients = DC
 
-    # 编码DC系数
+    #進行DC編碼係數
     encoded_dc_coeffs = [encode_dc_coefficient(coeff) for coeff in dc_coefficients]
     encoded_dc_bitstream = ''.join(encoded_dc_coeffs)
 
-
-    # 合并并压缩数据
     compressed_data = encoded_dc_bitstream
 
-    # 检查压缩数据是否只包含 '0' 和 '1'
+    #進行二元流處理
     if not set(compressed_data).issubset({'0', '1'}):
         raise ValueError("Invalid character in compressed data")
 
-    # 构建霍夫曼树
     dc_huffman_tree = build_huffman_tree(dc_huffman_table)
 
+    #進行解碼
     def decode_dc_coefficient(bitstream, huffman_tree):
         size = decode_huffman_code(bitstream, huffman_tree)
         if size == 0:
@@ -92,7 +87,6 @@ def Huffman_code(DC):
             print("Error reading magnitude:", e)
             return None
         
-        # 检查位流中是否还有足够的位元供解码
         magnitude = int(magnitude_bin, 2)
 
         if magnitude < (1 << (size - 1)):
@@ -100,10 +94,9 @@ def Huffman_code(DC):
 
         return magnitude
 
-    # 解码比特流
+    #二元碼處理
     bitstream = BitStream(bin=compressed_data)
 
-    # 解码DC系数
     decoded_dc_coeffs = []
     while bitstream.pos < bitstream.len and len(decoded_dc_coeffs) < len(dc_coefficients):
         try:
@@ -114,9 +107,22 @@ def Huffman_code(DC):
         except ValueError as e:
             print("Error decoding DC coefficient:", e)
             break
-    return DC,encoded_dc_bitstream,compressed_data,dc_huffman_tree,decoded_dc_coeffs
 
-    
+    # 生成編碼字典
+    def generate_huffman_dict(node, current_code=""):
+        if node is None:
+            return {}
+        if node.value is not None:
+            return {node.value: current_code}
+        codes = {}
+        codes.update(generate_huffman_dict(node.left, current_code + "0"))
+        codes.update(generate_huffman_dict(node.right, current_code + "1"))
+        return codes
+
+    huffman_dict = generate_huffman_dict(dc_huffman_tree)
+
+    return DC, encoded_dc_bitstream, compressed_data, dc_huffman_tree, decoded_dc_coeffs, huffman_dict
+
 
 
 """
