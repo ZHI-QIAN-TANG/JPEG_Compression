@@ -1,3 +1,5 @@
+# AC 跳過DC值後，Z字編碼
+# 回傳值為AC值陣列(已去掉DC值)
 def Zigzag(blocks) :
     i = 0
     j = 0

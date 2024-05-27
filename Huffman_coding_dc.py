@@ -1,18 +1,18 @@
 import numpy as np
 from bitstring import BitStream, ReadError
 
-def Huffman_code(DC, ACs):
-    # 將DC與AC的資料進行整數轉換
+def Huffman_code(DC):
+    # 将DC
     DC = np.array(DC, dtype=np.int32)
     
-    # 建立節點
+    # 创建节点
     class Node:
         def __init__(self, value=None):
             self.value = value
             self.left = None
             self.right = None
 
-    # 用於建置霍夫曼樹(使用節點進行處理)
+    # 用于建立霍夫曼树(使用节点进行处理)
     def build_huffman_tree(huffman_table):
         root = Node()
         for value, code in huffman_table.items():
@@ -29,7 +29,7 @@ def Huffman_code(DC, ACs):
             current_node.value = value
         return root
 
-    # 用於解碼
+    # 用于解码
     def decode_huffman_code(bitstream, root):
         current_node = root
         while current_node.value is None:
@@ -46,7 +46,127 @@ def Huffman_code(DC, ACs):
         6: '1110', 7: '11110', 8: '111110', 9: '1111110', 10: '11111110', 11: '111111110'
     }
 
-    # AC的霍夫曼表
+    # 进行DC差值计算
+    def encode_dc_coefficient(dc_coeff):
+        dc_coeff = int(dc_coeff)
+        magnitude = abs(dc_coeff)
+        size = magnitude.bit_length()
+
+        # 获取霍夫曼编码
+        huffman_code = dc_huffman_table[size]
+
+        # 获取补码表示
+        if dc_coeff < 0:
+            magnitude = (1 << size) - 1 + dc_coeff
+
+        # 去掉前缀
+        magnitude_bin = bin(magnitude)[2:].zfill(size)
+        return huffman_code + magnitude_bin
+
+    # 获取DC系数
+    dc_coefficients = DC
+
+    # 编码DC系数
+    encoded_dc_coeffs = [encode_dc_coefficient(coeff) for coeff in dc_coefficients]
+    encoded_dc_bitstream = ''.join(encoded_dc_coeffs)
+
+
+    # 合并并压缩数据
+    compressed_data = encoded_dc_bitstream
+
+    # 检查压缩数据是否只包含 '0' 和 '1'
+    if not set(compressed_data).issubset({'0', '1'}):
+        raise ValueError("Invalid character in compressed data")
+
+    # 构建霍夫曼树
+    dc_huffman_tree = build_huffman_tree(dc_huffman_table)
+
+    def decode_dc_coefficient(bitstream, huffman_tree):
+        size = decode_huffman_code(bitstream, huffman_tree)
+        if size == 0:
+            return 0
+
+        try:
+            magnitude_bin = bitstream.read('bin:' + str(size))
+        except ReadError as e:
+            print("Error reading magnitude:", e)
+            return None
+        
+        # 检查位流中是否还有足够的位元供解码
+        magnitude = int(magnitude_bin, 2)
+
+        if magnitude < (1 << (size - 1)):
+            magnitude -= (1 << size) - 1
+
+        return magnitude
+
+    # 解码比特流
+    bitstream = BitStream(bin=compressed_data)
+
+    # 解码DC系数
+    decoded_dc_coeffs = []
+    while bitstream.pos < bitstream.len and len(decoded_dc_coeffs) < len(dc_coefficients):
+        try:
+            decoded_dc_coeff = decode_dc_coefficient(bitstream, dc_huffman_tree)
+            if decoded_dc_coeff is None:
+                break
+            decoded_dc_coeffs.append(decoded_dc_coeff)
+        except ValueError as e:
+            print("Error decoding DC coefficient:", e)
+            break
+    return DC,encoded_dc_bitstream,compressed_data,dc_huffman_tree,decoded_dc_coeffs
+
+    
+
+
+"""
+def Huffman_code(DC, AC):
+    #將DC與AC的資料進行整數轉換
+    DC = np.array(DC, dtype=np.int32)
+    AC = np.array(AC, dtype=np.int32)
+    
+    #建立節點
+    class Node:
+        def __init__(self, value=None):
+            self.value = value
+            self.left = None
+            self.right = None
+
+    #用於建置霍夫曼樹(使用節點進行處理)
+    def build_huffman_tree(huffman_table):
+        root = Node()
+        for value, code in huffman_table.items():
+            current_node = root
+            for bit in code:
+                if bit == '0':
+                    if current_node.left is None:
+                        current_node.left = Node()
+                    current_node = current_node.left
+                else:
+                    if current_node.right is None:
+                        current_node.right = Node()
+                    current_node = current_node.right
+            current_node.value = value
+        return root
+
+    #用於解碼
+    def decode_huffman_code(bitstream, root):
+        current_node = root
+        while current_node.value is None:
+            bit = bitstream.read('bin:1')
+            if bit == '0':
+                current_node = current_node.left
+            else:
+                current_node = current_node.right
+        return current_node.value
+
+    #DC的霍夫曼表
+    dc_huffman_table = {
+        0: '00', 1: '010', 2: '011', 3: '100', 4: '101', 5: '110',
+        6: '1110', 7: '11110', 8: '111110', 9: '1111110', 10: '11111110', 11: '111111110'
+    }
+
+    #AC的霍夫曼表
     ac_huffman_table = {
         (0, 0): '1010',      # EOB (End of Block)
         (0, 1): '00',        (0, 2): '01',        (0, 3): '100',      (0, 4): '1011',     (0, 5): '11010',
@@ -80,7 +200,7 @@ def Huffman_code(DC, ACs):
         (14, 1): '1111111111101110', (14, 2): '1111111111101111', (14, 3): '1111111111110000', (14, 4): '1111111111110001', (14, 5): '1111111111110010',
         (14, 6): '1111111111110011', (14, 7): '1111111111110100', (14, 8): '1111111111110101', (14, 9): '1111111111110110', (14, 10): '1111111111110111',
         (15, 0): '11111111001',    # ZRL (Zero Run Length)
-        (15, 1): '1111111111111000', (15, 2): '1111111111111001', (15, 3): '1111111111111010', (15, 4): '1111111111111011', (15, 5): '1111111111111100',
+        (15, 1): '1111111111111000', (15, 2): '1111111111111009', (15, 3): '1111111111111010', (15, 4): '1111111111111011', (15, 5): '1111111111111100',
         (15, 6): '1111111111111101', (15, 7): '1111111111111110', (15, 8): '1111111111111111'
     }
 
@@ -103,26 +223,20 @@ def Huffman_code(DC, ACs):
 
     #抓取DC和AC係數
     dc_coefficients = DC
+    ac_coefficients = AC
 
-    # 編碼DC係數
+    #编碼DC係數
     encoded_dc_coeffs = [encode_dc_coefficient(coeff) for coeff in dc_coefficients]
     encoded_dc_bitstream = ''.join(encoded_dc_coeffs)
 
-    # 編碼AC係數
-    encoded_ac_bitstream = ''
-    for AC_block in ACs:
-        for AC in AC_block:
-            if AC == [0, 0]:  # EOB (End of Block)
-                encoded_ac_bitstream += ac_huffman_table[(0, 0)]
-                break
-            run_length, size = AC
-            huffman_code = ac_huffman_table[(run_length, size)]
-            encoded_ac_bitstream += huffman_code
+    #編碼AC係數
+    encoded_ac_coeffs = [ac_huffman_table[tuple(coeff)] for coeff in ac_coefficients]
+    encoded_ac_bitstream = ''.join(encoded_ac_coeffs)
 
-    # 合併並壓縮數據
+    #合併並壓縮數據
     compressed_data = encoded_dc_bitstream + encoded_ac_bitstream
 
-    # 建構霍夫曼樹
+    #建構霍夫曼樹
     dc_huffman_tree = build_huffman_tree(dc_huffman_table)
     ac_huffman_tree = build_huffman_tree(ac_huffman_table)
 
@@ -137,18 +251,18 @@ def Huffman_code(DC, ACs):
             print("Error reading magnitude:", e)
             return None
         
-        # 檢查位流中是否還有足夠的位元供解碼
+        #檢查位流中是否還有足夠的位元供解碼
         magnitude = int(magnitude_bin, 2)
 
         if magnitude < (1 << (size - 1)):
             magnitude -= (1 << size) - 1
 
         return magnitude
-
-    # 解碼比特流
+    #解碼比特流
     bitstream = BitStream(bin=compressed_data)
 
-    # 解碼DC係數
+    #解碼AC係數
+    bitstream.pos = 0
     decoded_dc_coeffs = []
     while bitstream.pos < bitstream.len and len(decoded_dc_coeffs) < len(dc_coefficients):
         try:
@@ -160,7 +274,7 @@ def Huffman_code(DC, ACs):
             print("Error decoding DC coefficient:", e)
             break
 
-    # 解碼AC係數
+    bitstream.pos = len(encoded_dc_bitstream)
     decoded_ac_coeffs = []
     while bitstream.pos < bitstream.len:
         ac_coeff = decode_huffman_code(bitstream, ac_huffman_tree)
@@ -169,4 +283,16 @@ def Huffman_code(DC, ACs):
             break
         decoded_ac_coeffs.append(ac_coeff)
 
-    return DC, ACs, encoded_dc_bitstream, encoded_ac_bitstream, compressed_data, dc_huffman_tree, ac_huffman_tree, decoded_dc_coeffs, decoded_ac_coeffs
+    '''
+    print("Original DC Coefficients:", DC,'\n')
+    print("Original AC Coefficients:", AC,'\n')
+    print("Encoded DC Bitstream:", encoded_dc_bitstream)
+    print("Encoded AC Bitstream:", encoded_ac_bitstream)
+    print("Compressed Data:", compressed_data)
+    print("Decoded DC Coefficients:", decoded_dc_coeffs,'\n')
+    print("Decoded AC Coefficients:", decoded_ac_coeffs,'\n')
+    '''
+    
+    return DC,AC,encoded_dc_bitstream,encoded_ac_bitstream,compressed_data,dc_huffman_tree,ac_huffman_tree,decoded_dc_coeffs,decoded_ac_coeffs
+"""
+
