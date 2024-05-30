@@ -96,6 +96,8 @@ import DPCM
 import Huffman_coding_ac
 import Huffman_coding_dc
 import AC_DC_tree_DHT
+import test as t
+import header as h
 
 '''
 image_path = "test2.jpg" # 將圖像進行導入
@@ -182,6 +184,11 @@ def generate_encoded_data(image_path):
     blocks = crop.crop_image_into_8x8_blocks(image_path)
     URLs = []
     UDCs = []
+    
+    YRLs = []
+    YDCs = []
+    VRLs = []
+    VDCs = []
     for i in range(len(blocks)):
         img = blocks[i]
         YuvMatrix = np.array([[0.299, 0.587, 0.114],[-0.147, -0.289, 0.436],[0.615, -0.515, -0.100]])
@@ -207,23 +214,30 @@ def generate_encoded_data(image_path):
 
         UDCs.append(QU[0][0])
         URLs.append(URL)
+        YDCs.append(QY[0][0])
+        YRLs.append(YRL)
+        VDCs.append(QV[0][0])
+        VRLs.append(VRL)
 
+    
+    YDPCM = DPCM.DPCM(YDCs)
     UDPCM = DPCM.DPCM(UDCs)
+    VDPCM = DPCM.DPCM(VDCs)
 
     huffman_encoded_data_ac, ac_huffman_tree = Huffman_coding_ac.Huffman_code(URLs)
     DC,encoded_dc_bitstream,compressed_data,huffman_tree,decoded_dc_coeffs,dc_huffman_tree =Huffman_coding_dc.Huffman_code(UDPCM)
     compressed_data = encoded_dc_bitstream + huffman_encoded_data_ac
     ACDCDHT = AC_DC_tree_DHT.AC_DC_tree_DHT(dc_huffman_tree,ac_huffman_tree)
-
+    return compressed_data,ac_huffman_tree,dc_huffman_tree
     # print("ac_huffman_tree = " ,ac_huffman_tree)
     # print("dc_huffman_tree = " ,dc_huffman_tree)
 
     ##需要進入標頭的內容:
     #compressed_data = 為ACDC的二元流碼
     #ACDCDHT = 為ACDC的霍夫碼標頭資料
-
-    return compressed_data
-
+    
+    
+'''
 def write_jpeg_file(encoded_data, output_file):
     # 打開輸出檔案
     with open(output_file, "wb") as f:
@@ -241,20 +255,23 @@ def write_jpeg_file(encoded_data, output_file):
         f.write(b"\xFF\xD9")
 
     print(f"JPEG file written: {output_file}")
+'''
 
 def main():
     image_path = "test2.jpg"
-    output_jpeg = "output.jpg"
-
+    output_jpeg = "output.zip"
     # 假設您已經實現了將圖片進行編碼並生成編碼後的資料的函數
-    encoded_data = generate_encoded_data(image_path)
+    encoded_data,ACHtable,DCHtable = generate_encoded_data(image_path)
+    
+    print(h.save_jpeg_header(output_jpeg, 400, 600))
 
     if encoded_data:
         print(f"Encoded data size: {len(encoded_data)} bytes")
         # 將編碼後的資料寫入 JPEG 檔案中
-        write_jpeg_file(encoded_data, output_jpeg)
+        h.save_jpeg_header(output_jpeg, 400, 600)
     else:
         print("Failed to generate encoded data.")
+
 
 if __name__ == "__main__":
     main()

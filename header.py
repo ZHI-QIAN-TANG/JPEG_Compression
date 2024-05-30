@@ -1,197 +1,105 @@
-import sys
-import os
+def generate_jpeg_header(width, height):
+    # JPEG標頭常量部分
+    SOI = b'\xFF\xD8'  # Start of Image
+    APP0 = b'\xFF\xE0'  # Application Marker
+    JFIF = b'JFIF\x00'  # JFIF標識符
+    length = b'\x00\x10'  # APP0段長度
+    version = b'\x01\x01'  # JFIF版本
+    units = b'\x00'  # 密度單位（0：無單位，1：每英寸，2：每厘米）
+    x_density = b'\x00\x48'  # X方向密度
+    y_density = b'\x00\x48'  # Y方向密度
+    x_thumb = b'\x00'  # 縮略圖寬度
+    y_thumb = b'\x00'  # 縮略圖高度
 
-# JPEG marker definitions. refer to itu-t81 Table B.1
-JPEG_MARKER_SOF0 = 0xc0    # Baseline DCT
-JPEG_MARKER_SOF1 = 0xc1    # Extended sequential DCT
-JPEG_MARKER_SOF2 = 0xc2    # Progressive DCT
-JPEG_MARKER_SOF3 = 0xc3    # Lossless(sequential)
+    # 定義SOF0段（Start Of Frame 0）
+    SOF0 = b'\xFF\xC0'
+    sof_length = b'\x00\x11'  # 段長度
+    precision = b'\x08'  # 精度
+    height_bytes = height.to_bytes(2, 'big')
+    width_bytes = width.to_bytes(2, 'big')
+    num_components = b'\x03'  # 分量數（Y, Cb, Cr）
 
-JPEG_MARKER_SOF4 = 0xc5    # Differential sequential DCT
-JPEG_MARKER_SOF5 = 0xc6    # Differential progressive DCT
-JPEG_MARKER_SOF6 = 0xc7    # Differential Lossless(sequential)
+    # 每個分量的信息（Y, Cb, Cr）
+    components = (
+        b'\x01\x11\x00'  # Y分量（ID：1，取樣係數：1x1，量化表ID：0）
+        b'\x02\x11\x01'  # Cb分量（ID：2，取樣係數：1x1，量化表ID：1）
+        b'\x03\x11\x01'  # Cr分量（ID：3，取樣係數：1x1，量化表ID：1）
+    )
+    
+    # 定義DQT段（Define Quantization Table）
+    DQT_Y = b'\xFF\xDB'  # Define Quantization Table
+    dqt_length_Y = b'\x00\x43'  # 段長度
+    dqt_info_Y = b'\x00'  # 表信息
+    q_table_Y = bytes([
+        16, 11, 10, 16, 24, 41, 51, 61,
+        12, 12, 14, 19, 26, 58, 60, 55,
+        14, 13, 16, 24, 40, 67, 69, 56,
+        14, 17, 22, 29, 51, 87, 80, 62,
+        18, 22, 37, 56, 68, 109, 103, 77,
+        24, 35, 55, 64, 81, 104, 113, 92,
+        49, 64, 78, 87, 103, 121, 120, 101,
+        72, 92, 95, 98, 112, 100, 103, 99])
 
-JPEG_MARKER_JPG = 0xc8     # Reserved for JPEG extensions
-JPEG_MARKER_SOF9 = 0xc9    # Extended sequential DCT
-JPEG_MARKER_SOF10 = 0xca   # Progressive DCT
-JPEG_MARKER_SOF11 = 0xcb   # Lossless(dequential)
+    # Define Quantization Table for Cb, Cr
+    DQT_C = b'\xFF\xDB'  # Define Quantization Table
+    dqt_length_C = b'\x00\x43'  # 段長度
+    dqt_info_C = b'\x01'  # 表信息
+    q_table_C = bytes([
+        17, 18, 24, 47, 99, 99, 99, 99,
+        18, 21, 26, 66, 99, 99, 99, 99,
+        24, 26, 56, 99, 99, 99, 99, 99,
+        47, 66, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99])
 
-JPEG_MARKER_SOF13 = 0xcd   # Differential sequential DCT
-JPEG_MARKER_SOF14 = 0xce   # Differential progressive DCT
-JPEG_MARKER_SOF15 = 0xcf   # Differential lossless(sequential)
+    DHT_dc = b'\xFF\xC4'  # Define Huffman Table
+    dht_dc_length = b'\x00\x1F'  # 段長度
+    dht_dc_info = b'\x00'  # 表信息
+    huffman_table_dc = bytes.fromhex('001f0000010501010101010100000000000000808182838485868788898a8b')
+    
+    DHT_ac = b'\xFF\xC4' 
+    dht_ac_length = b'\x00\xB5' 
+    dht_ac_info = b'\x10'
+    huffman_table_ac = bytes.fromhex('00281001010101000300020202020204000000808f817f7e82837d847c8586877a7b898a79888b8d')
+    
+    # 定義SOS段（Start Of Scan）
+    SOS = b'\xFF\xDA'
+    sos_length = b'\x00\x0C'  # 段長度
+    num_sos_components = b'\x03'  # 分量數
+    sos_components = (
+        b'\x01\x00'  # Y分量
+        b'\x02\x11'  # Cb分量
+        b'\x03\x11'  # Cr分量
+    )
+    start_spectral = b'\x00'
+    end_spectral = b'\x3F'
+    approx_high = b'\x00'
 
-JPEG_MARKER_RST0 = 0xd0    # Restart ...
-JPEG_MARKER_RST1 = 0xd1
-JPEG_MARKER_RST2 = 0xd2
-JPEG_MARKER_RST3 = 0xd3
-JPEG_MARKER_RST4 = 0xd4
-JPEG_MARKER_RST5 = 0xd5
-JPEG_MARKER_RST6 = 0xd6
-JPEG_MARKER_RST7 = 0xd7
-JPEG_MARKER_RST8 = 0xd8
-JPEG_MARKER_RST9 = 0xd9
+    # EOI標記（End of Image）
+    EOI = b'\xFF\xD9'
 
-JPEG_MARKER_DHT = 0xc4     # Define Huffman table(s)
-JPEG_MARKER_DAC = 0xcc     # Define arithmetic coding conditioning(s)
+    # 組裝JPEG標頭
+    header = (
+        SOI +
+        APP0 + length + JFIF + version + units + x_density + y_density + x_thumb + y_thumb +
+        SOF0 + sof_length + precision + height_bytes + width_bytes + num_components + components +
+        DQT_Y + dqt_length_Y + dqt_info_Y + q_table_Y +
+        DQT_C + dqt_length_C + dqt_info_C + q_table_C +
+        DHT_dc + dht_dc_length + dht_dc_info + huffman_table_dc +
+        DHT_ac + dht_ac_length + dht_ac_info + huffman_table_ac +
+        SOS + sos_length + num_sos_components + sos_components + start_spectral + end_spectral + approx_high +
+        EOI
+    )
 
-JPEG_MARKER_SOI = 0xd8     # Start of image
-JPEG_MARKER_EOI = 0xd9     # End of image
-JPEG_MARKER_SOS = 0xda     # Start of scan
-JPEG_MARKER_DQT = 0xdb     # Define quantization table(s)
-JPEG_MARKER_DNL = 0xdc     # Define number of lines
-JPEG_MARKER_DRI = 0xdd     # Define restart interval
-JPEG_MARKER_DHP = 0xde     # Define hierarchial progression
-JPEG_MARKER_EXP = 0xdf     # Expand reference component(s)
-JPEG_MARKER_APP0 = 0xe0    # Application marker, JFIF/AVI1...
-JPEG_MARKER_APP1 = 0xe1    # EXIF Metadata etc...
-JPEG_MARKER_APP2 = 0xe2    # Not common...
-JPEG_MARKER_APP13 = 0xed   # Photoshop Save As: IRB, 8BIM, IPTC
-JPEG_MARKER_APP14 = 0xee   # Not common...
-JPEG_MARKER_APP15 = 0xef   # Not common...
+    return header
 
-seg_name = [
-    "Baseline DCT; Huffman",
-    "Extended sequential DCT; Huffman",
-    "Progressive DCT; Huffman",
-    "Spatial lossless; Huffman",
-    "Huffman table",
-    "Differential sequential DCT; Huffman",
-    "Differential progressive DCT; Huffman",
-    "Differential spatial; Huffman",
-    "[Reserved: JPEG extension]",
-    "Extended sequential DCT; Arithmetic",
-    "Progressive DCT; Arithmetic",
-    "Spatial lossless; Arithmetic",
-    "Arithmetic coding conditioning",
-    "Differential sequential DCT; Arithmetic",
-    "Differential progressive DCT; Arithmetic",
-    "Differential spatial; Arithmetic",
-    "Restart",
-    "Restart",
-    "Restart",
-    "Restart",
-    "Restart",
-    "Restart",
-    "Restart",
-    "Restart",
-    "Start of image",
-    "End of image",
-    "Start of scan",
-    "Quantisation table",
-    "Number of lines",
-    "Restart interval",
-    "Hierarchical progression",
-    "Expand reference components",
-    "JFIF header",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: application extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "[Reserved: JPEG extension]",
-    "Comment",
-    "[Invalid]",
-]
+def save_jpeg_header(filename, width, height):
+    header = generate_jpeg_header(width, height)
+    with open(filename, 'wb') as f:
+        f.write(header)
+    return header
 
-def show_segment(marker):
-    index = marker - 0xc0
-    if index < 0 or index >= len(seg_name):
-        return
-    print(seg_name[index])
-
-def parse_jpeg_header(data, length):
-    start = 0
-    end = length
-    cur = start
-    found = False
-
-    while cur < end:
-        if data[cur] != 0xff:
-            print("{:02x} {:02x} -> {:02x} {:02x}".format(data[cur-2], data[cur-1], data[cur], data[cur+1]))
-            print("cur pos: 0x{:x}".format(cur - start))
-            break
-
-        marker = data[cur]
-        cur += 1
-
-        if marker == JPEG_MARKER_SOS:
-            break
-
-        show_segment(marker)
-
-        if marker == JPEG_MARKER_SOI:
-            pass
-        elif marker == JPEG_MARKER_DRI:
-            cur += 4  # |length[0..1]||rst_interval[2..3]|
-        elif marker == JPEG_MARKER_SOF2:
-            print("progressive JPEGs not suppoted")
-        elif marker == JPEG_MARKER_SOF0:
-            length = (data[cur] << 8) + data[cur+1]
-            cur += 2
-            length -= 2
-            sample_precision = data[cur]
-            cur += 1
-            print("sample_precision = {}".format(sample_precision))
-            height = (data[cur] << 8) + data[cur+1]
-            cur += 2
-            width = (data[cur] << 8) + data[cur+1]
-            cur += 2
-            length -= 5
-            cur += length
-            found = True
-        else:
-            length = (data[cur] << 8) + data[cur+1]
-            cur += 2
-            length -= 2
-            cur += length
-
-    print("parse jpeg header finish")
-    return found
-
-def main():
-    if len(sys.argv) != 2:
-        print("usage: jpeg_parse file")
-        sys.exit(1)
-
-    file_path = sys.argv[1]
-
-    try:
-        with open(file_path, "rb") as f:
-            bs_mem = f.read()
-            f_len = len(bs_mem)
-            print("file length {} bytes".format(f_len))
-
-            # parse jpeg header
-            if parse_jpeg_header(bs_mem, f_len):
-                print("picture width: {}, height: {}".format(width, height))
-    except FileNotFoundError:
-        print("File not found:", file_path)
-    except Exception as e:
-        print("Error:", e)
-
-if __name__ == "__main__":
-    main()
+# 用例
+#print(save_jpeg_header('headertmp.jpg', 400, 600))
