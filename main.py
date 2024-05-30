@@ -93,10 +93,9 @@ import Quantization as Q
 import Zigzag as Z
 import RLC
 import DPCM
+import AC_DC_tree_DHT
 import Huffman_coding_ac
 import Huffman_coding_dc
-import AC_DC_tree_DHT
-import test as t
 import header as h
 
 '''
@@ -196,11 +195,12 @@ def generate_encoded_data(image_path):
         RData, GData, BData = Convert_RGB_to_YUV.Cut_RGB(img, zero_channel)
         YUV = Convert_RGB_to_YUV.Convert_YUV(img, YuvMatrix)
         YSpllit, USplist, VSplite, Y, U, V = Convert_RGB_to_YUV.Cut_YUV(YUV)
-
+        
+        DCTY = DCT.DCT(Y)
         DCTU = DCT.DCT(U)
         DCTV = DCT.DCT(V)
 
-        QY = Q.YQuantization(Y)
+        QY = Q.YQuantization(DCTY)
         QU = Q.CbCrQuantization(DCTU)
         QV = Q.CbCrQuantization(DCTV)
         
@@ -224,14 +224,16 @@ def generate_encoded_data(image_path):
     UDPCM = DPCM.DPCM(UDCs)
     VDPCM = DPCM.DPCM(VDCs)
 
-    huffman_encoded_data_ac, ac_huffman_tree = Huffman_coding_ac.Huffman_code(URLs)
-    DC,encoded_dc_bitstream,compressed_data,huffman_tree,decoded_dc_coeffs,dc_huffman_tree =Huffman_coding_dc.Huffman_code(UDPCM)
-    compressed_data = encoded_dc_bitstream + huffman_encoded_data_ac
-    ACDCDHT = AC_DC_tree_DHT.AC_DC_tree_DHT(dc_huffman_tree,ac_huffman_tree)
-    return compressed_data,ac_huffman_tree,dc_huffman_tree
+    dc_jpeg_header, dc_merged_encoded_data = Huffman_coding_dc.Huffman_code(YDPCM,UDPCM,VDPCM)
+    print("dc_jpeg_header" , dc_jpeg_header)
+    print("dc_merged_encoded_data" , dc_merged_encoded_data)
+    ac_jpeg_header, ac_merged_encoded_data = Huffman_coding_ac.Huffman_code(YRLs,URLs,VRLs)
+    print("ac_jpeg_header" , ac_jpeg_header)
+    print("ac_merged_encoded_data" , ac_merged_encoded_data)
+
     # print("ac_huffman_tree = " ,ac_huffman_tree)
     # print("dc_huffman_tree = " ,dc_huffman_tree)
-
+    
     ##需要進入標頭的內容:
     #compressed_data = 為ACDC的二元流碼
     #ACDCDHT = 為ACDC的霍夫碼標頭資料
@@ -259,7 +261,7 @@ def write_jpeg_file(encoded_data, output_file):
 
 def main():
     image_path = "test2.jpg"
-    output_jpeg = "output.zip"
+    output_jpeg = "output.jpg"
     # 假設您已經實現了將圖片進行編碼並生成編碼後的資料的函數
     encoded_data,ACHtable,DCHtable = generate_encoded_data(image_path)
     

@@ -1,99 +1,135 @@
 from heapq import heappush, heappop, heapify
-from collections import Counter
+from collections import Counter, defaultdict
 
-def Huffman_code(AC):
+def Huffman_code(Y_data, U_data, V_data):
+    def Huffman_code(data):
+        class Node:
+            def __init__(self, symbol=None, weight=0, left=None, right=None):
+                self.symbol = symbol
+                self.weight = weight
+                self.left = left
+                self.right = right
 
-    def rle_decode(encoded_data):
-        decoded_data = []
-        for segment in encoded_data:
+            def __lt__(self, other):
+                return self.weight < other.weight
+
+        def create_huffman_tree(frequencies, max_code_length=16):
+            heap = [Node(symbol, weight) for symbol, weight in frequencies.items()]
+            heapify(heap)
+            while len(heap) > 1:
+                lo = heappop(heap)
+                hi = heappop(heap)
+                merged = Node(weight=lo.weight + hi.weight, left=lo, right=hi)
+                heappush(heap, merged)
+            
+            root = heap[0]
+            huffman_dict = {}
+            def assign_codes(node, code=""):
+                if node.symbol is not None:
+                    huffman_dict[node.symbol] = code
+                    return
+                if node.left:
+                    assign_codes(node.left, code + '0')
+                if node.right:
+                    assign_codes(node.right, code + '1')
+            
+            assign_codes(root)
+
+            # Check if any code length exceeds max_code_length
+            lengths = defaultdict(int)
+            for code in huffman_dict.values():
+                lengths[len(code)] += 1
+
+            # If any code length exceeds the maximum, adjust the tree
+            if any(length > max_code_length for length in lengths.keys()):
+                huffman_dict = adjust_code_lengths(huffman_dict, max_code_length)
+
+            return huffman_dict
+
+        def adjust_code_lengths(huffman_dict, max_code_length):
+            # This function adjusts the code lengths to fit within the max_code_length constraint
+            sorted_symbols = sorted(huffman_dict.items(), key=lambda item: (len(item[1]), item[1]))
+            new_huffman_dict = {}
+            current_length = 1
+            for symbol, code in sorted_symbols:
+                if len(code) > max_code_length:
+                    new_code = bin(len(new_huffman_dict))[2:].zfill(max_code_length)
+                    new_huffman_dict[symbol] = new_code
+                else:
+                    new_huffman_dict[symbol] = code
+                current_length += 1
+            return new_huffman_dict
+
+        # Flatten RLE data for Huffman encoding and ensure symbols are within the valid range
+        flat_data = []
+        for segment in data:
             for count, value in segment:
-                decoded_data.extend([value] * count)
-        return decoded_data
+                count = max(0, min(255, count))  # Ensure count is within valid range
+                value = max(0, min(255, value))  # Ensure value is within valid range
+                flat_data.append(count)
+                flat_data.append(value)
 
-    class Node:
-        def __init__(self, left=None, right=None):
-            self.left = left
-            self.right = right
-
-        def children(self):
-            return (self.left, self.right)
-
-        def __lt__(self, other):
-            return 0
-
-    #創造霍夫樹
-    def create_huffman_tree(frequencies):
-        heap = [[weight, [symbol, ""]] for symbol, weight in frequencies.items()]
-        heapify(heap)
-        while len(heap) > 1:
-            lo = heappop(heap)
-            hi = heappop(heap)
-            for pair in lo[1:]:
-                pair[1] = '0' + pair[1]
-            for pair in hi[1:]:
-                pair[1] = '1' + pair[1]
-            heappush(heap, [lo[0] + hi[0]] + lo[1:] + hi[1:])
-        return sorted(heappop(heap)[1:], key=lambda p: (len(p[-1]), p))
-
-    #霍夫曼編碼
-    def huffman_encode(data):
-        frequencies = Counter(data)
-        huffman_tree = create_huffman_tree(frequencies)
-        huffman_dict = {symbol: code for symbol, code in huffman_tree}
-        encoded_data = ''.join(huffman_dict[symbol] for symbol in data)
+        # Huffman encode the flat data
+        frequencies = Counter(flat_data)
+        huffman_dict = create_huffman_tree(frequencies)
+        encoded_data = ''.join(huffman_dict[symbol] for symbol in flat_data)
+        
         return encoded_data, huffman_dict
 
-    #霍夫曼解碼
-    def huffman_decode(encoded_data, huffman_dict):
-        reverse_huffman_dict = {v: k for k, v in huffman_dict.items()}
-        decoded_data = []
-        buffer = ""
-        for bit in encoded_data:
-            buffer += bit
-            if buffer in reverse_huffman_dict:
-                decoded_data.append(reverse_huffman_dict[buffer])
-                buffer = ""
-        return decoded_data
+    def create_dht_segment(huffman_dict, table_class, table_id):
+        lengths = [0] * 16
+        symbols = []
+        
+        for symbol, code in huffman_dict.items():
+            code_length = len(code)
+            if code_length > 16:
+                raise ValueError(f"Code length {code_length} is too long for JPEG standard")
+            lengths[code_length - 1] += 1
+            symbol = max(0, min(255, symbol))  # Ensure symbol is within valid byte range
+            symbols.append(symbol)
 
+        dht_segment = bytearray()
+        dht_segment.extend(b'\xFF\xC4\x00\xB5\x10')  # DHT marker
+        dht_length = 2 + 1 + 16 + len(symbols)
+        dht_segment.extend(dht_length.to_bytes(2, byteorder='big'))
+        dht_segment.append((table_class << 4) | table_id)
+        dht_segment.extend(lengths)
+        dht_segment.extend(symbols)
+        
+        return dht_segment
 
-    # 步骤1：RLE編碼數據
-    #print("RLE 編碼數據:", AC)
+    def generate_jpeg_header(y_huffman_dict, u_huffman_dict, v_huffman_dict):
+        dht_segments = bytearray()
+        
+        # Create DHT segments for Y, U, and V components
+        dht_segments.extend(create_dht_segment(y_huffman_dict, 0, 0))  # Y DC table
+        dht_segments.extend(create_dht_segment(y_huffman_dict, 1, 0))  # Y AC table
+        dht_segments.extend(create_dht_segment(u_huffman_dict, 0, 1))  # U DC table
+        dht_segments.extend(create_dht_segment(u_huffman_dict, 1, 1))  # U AC table
+        dht_segments.extend(create_dht_segment(v_huffman_dict, 0, 2))  # V DC table
+        dht_segments.extend(create_dht_segment(v_huffman_dict, 1, 2))  # V AC table
 
-    # 扁平化RLE數據以進行Huffman編碼
-    flat_data = []
-    for segment in AC:
-        for count, value in segment:
-            flat_data.append(count)
-            flat_data.append(value)
+        # Here we should add other JPEG header segments (SOI, APP0, DQT, SOF0, SOS, etc.)
+        # For simplicity, this example only focuses on DHT segments.
+        
+        return dht_segments
 
-    # 步骤2：Huffman編碼
-    huffman_encoded_data, huffman_dict = huffman_encode(flat_data)
-    #print("Huffman 編碼數據:", huffman_encoded_data)
-    #print("Huffman 字典:", huffman_dict)
+    y_huffman_encoded_data, y_huffman_dict = Huffman_code(Y_data)
+    u_huffman_encoded_data, u_huffman_dict = Huffman_code(U_data)
+    v_huffman_encoded_data, v_huffman_dict = Huffman_code(V_data)
 
-    # 步骤3：Huffman解码
-    huffman_decoded_data = huffman_decode(huffman_encoded_data, huffman_dict)
-    #print("Huffman 解碼數據:", huffman_decoded_data)
+    jpeg_header = generate_jpeg_header(y_huffman_dict, u_huffman_dict, v_huffman_dict)
 
-    # 在Huffman解碼數據重建RLE編碼數據
-    reconstructed_rle_encoded_data = []
-    segment = []
-    for i in range(0, len(huffman_decoded_data), 2):
-        count = huffman_decoded_data[i]
-        value = huffman_decoded_data[i + 1]
-        segment.append([count, value])
-        if count == 0 and value == 0:
-            reconstructed_rle_encoded_data.append(segment)
-            segment = []
+    # 合并YUV二进制编码数据
+    merged_encoded_data = y_huffman_encoded_data + u_huffman_encoded_data + v_huffman_encoded_data
 
-    # 確定數據都被處理
-    if segment:
-        reconstructed_rle_encoded_data.append(segment)
+    return jpeg_header, merged_encoded_data
 
-    #print("重建RLE的數據:", reconstructed_rle_encoded_data)
+# # Example usage:
+# Y_data = [[[3, 1], [2, 5], [1, 0]], [[1, 2], [0, 0]]]  # Example RLE data for Y component
+# U_data = [[[2, 3], [3, 4], [1, 0]], [[1, 1], [0, 0]]]  # Example RLE data for U component
+# V_data = [[[1, 4], [2, 3], [1, 0]], [[1, 5], [0, 0]]]  # Example RLE data for V component
 
-    # 驗證數據是否與原始相同
-    #print("数据匹配:", AC == reconstructed_rle_encoded_data)
-    
-    return huffman_encoded_data, huffman_dict
-
+# jpeg_header, merged_encoded_data = Huffman_code(Y_data, U_data, V_data)
+# print(jpeg_header)
+# print(merged_encoded_data)
