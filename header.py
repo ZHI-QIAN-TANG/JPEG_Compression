@@ -1,4 +1,8 @@
-def generate_jpeg_header(width, height):
+import Huffman_coding_ac as Ha
+import Huffman_coding_dc as Hd
+
+
+def generate_jpeg_header(width, height,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs):
     # JPEG標頭常量部分
     SOI = b'\xFF\xD8'  # Start of Image
     APP0 = b'\xFF\xE0'  # Application Marker
@@ -53,16 +57,21 @@ def generate_jpeg_header(width, height):
         99, 99, 99, 99, 99, 99, 99, 99,
         99, 99, 99, 99, 99, 99, 99, 99,
         99, 99, 99, 99, 99, 99, 99, 99])
-
+    '''
     DHT_dc = b'\xFF\xC4'  # Define Huffman Table
     dht_dc_length = b'\x00\x1F'  # 段長度
     dht_dc_info = b'\x00'  # 表信息
     huffman_table_dc = bytes.fromhex('001f0000010501010101010100000000000000808182838485868788898a8b')
+    '''
+    DHT_dc = Hd.Huffman_code(YDPCM,UDPCM,VDPCM)
     
+    '''
     DHT_ac = b'\xFF\xC4' 
     dht_ac_length = b'\x00\xB5' 
     dht_ac_info = b'\x10'
     huffman_table_ac = bytes.fromhex('00281001010101000300020202020204000000808f817f7e82837d847c8586877a7b898a79888b8d')
+    '''
+    DHT_ac = Ha.Huffman_code(YRLs,URLs,VRLs)
     
     # 定義SOS段（Start Of Scan）
     SOS = b'\xFF\xDA'
@@ -87,16 +96,15 @@ def generate_jpeg_header(width, height):
         SOF0 + sof_length + precision + height_bytes + width_bytes + num_components + components +
         DQT_Y + dqt_length_Y + dqt_info_Y + q_table_Y +
         DQT_C + dqt_length_C + dqt_info_C + q_table_C +
-        DHT_dc + dht_dc_length + dht_dc_info + huffman_table_dc +
-        DHT_ac + dht_ac_length + dht_ac_info + huffman_table_ac +
+        DHT_dc + DHT_ac + 
         SOS + sos_length + num_sos_components + sos_components + start_spectral + end_spectral + approx_high +
         EOI
     )
 
     return header
 
-def save_jpeg_header(filename, width, height):
-    header = generate_jpeg_header(width, height)
+def save_jpeg_header(filename, width, height,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs):
+    header = generate_jpeg_header(width, height,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs)
     with open(filename, 'wb') as f:
         f.write(header)
     return header

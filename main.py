@@ -263,17 +263,18 @@ def main():
     image_path = "test2.jpg"
     output_jpeg = "output.jpg"
     # 假設您已經實現了將圖片進行編碼並生成編碼後的資料的函數
-    encoded_data,ACHtable,DCHtable = generate_encoded_data(image_path)
+    #encoded_data,ACHtable,DCHtable = generate_encoded_data(image_path)
     
-    print(h.save_jpeg_header(output_jpeg, 400, 600))
-
+    #print(h.save_jpeg_header(output_jpeg, 400, 600,,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs))
+    generate_encoded_data(image_path)
+    '''
     if encoded_data:
         print(f"Encoded data size: {len(encoded_data)} bytes")
         # 將編碼後的資料寫入 JPEG 檔案中
         h.save_jpeg_header(output_jpeg, 400, 600)
     else:
         print("Failed to generate encoded data.")
-
+    '''
 
 if __name__ == "__main__":
     main()
