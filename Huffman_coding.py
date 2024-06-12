@@ -93,18 +93,18 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
         
         return flattened_data, decoded_data_from_bytes
 
-    # 对AC数据进行霍夫曼编码和解码，并获取霍夫曼编码表和编码数据的字节表示
+    # 對AC資料進行霍夫曼編碼和解碼，並獲取霍夫曼表和編碼資料的字節
     Y_AC_flattened, Y_AC_encoded, Y_AC_decoded, Y_AC_codebook, _ = encode_and_decode(Y_AC_data)
     U_AC_flattened, U_AC_encoded, U_AC_decoded, U_AC_codebook, _ = encode_and_decode(U_AC_data)
     V_AC_flattened, V_AC_encoded, V_AC_decoded, V_AC_codebook, _ = encode_and_decode(V_AC_data)
 
-    # 对DC数据进行霍夫曼编码和解码，并获取霍夫曼编码表和编码数据的字节表示
+    # 對DC資料進行霍夫曼編碼和解碼，並獲取霍夫曼表和編碼資料的字節
     Y_DC_flattened, Y_DC_encoded, Y_DC_decoded, Y_DC_codebook, _ = encode_and_decode(Y_DC_data, is_dc=True)
     U_DC_flattened, U_DC_encoded, U_DC_decoded, U_DC_codebook, _ = encode_and_decode(U_DC_data, is_dc=True)
     V_DC_flattened, V_DC_encoded, V_DC_decoded, V_DC_codebook, _ = encode_and_decode(V_DC_data, is_dc=True)
 
 
-    # 序列化霍夫曼编码表和编码数据为字节流
+    # 序列化霍夫曼表和編碼數據為16進制
     Y_AC_codebook_bytes, Y_AC_encoded_data_bytes = serialize_data(Y_AC_codebook, Y_AC_encoded)
     U_AC_codebook_bytes, U_AC_encoded_data_bytes = serialize_data(U_AC_codebook, U_AC_encoded)
     V_AC_codebook_bytes, V_AC_encoded_data_bytes = serialize_data(V_AC_codebook, V_AC_encoded)
@@ -113,7 +113,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     U_DC_codebook_bytes, U_DC_encoded_data_bytes = serialize_data(U_DC_codebook, U_DC_encoded)
     V_DC_codebook_bytes, V_DC_encoded_data_bytes = serialize_data(V_DC_codebook, V_DC_encoded)
 
-    # 打印霍夫曼编码表和编码数据的字节表示
+    # 印出霍夫曼編碼與資料:(codebook:霍夫曼表、encoded:資料)
     print("Y_AC_codebook_bytes:", Y_AC_codebook_bytes)
     print("Y_AC_encoded_data_bytes:", Y_AC_encoded_data_bytes)
     print("U_AC_codebook_bytes:", U_AC_codebook_bytes)
@@ -129,17 +129,17 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     print("V_DC_encoded_data_bytes:", V_DC_encoded_data_bytes)
 
     print()
-    # 对AC数据进行霍夫曼编码和解码，验证序列化和反序列化
+    # 對AC數據進行霍夫曼編碼和解碼，驗證序列化和反序列化
     Y_AC_flattened, Y_AC_decoded_from_bytes = bytes_roundtrip(Y_AC_data)
     U_AC_flattened, U_AC_decoded_from_bytes = bytes_roundtrip(U_AC_data)
     V_AC_flattened, V_AC_decoded_from_bytes = bytes_roundtrip(V_AC_data)
 
-    # 对DC数据进行霍夫曼编码和解码，验证序列化和反序列化
+    # 對DC數據進行霍夫曼編碼和解碼，驗證序列化和反序列化
     Y_DC_flattened, Y_DC_decoded_from_bytes = bytes_roundtrip(Y_DC_data, is_dc=True)
     U_DC_flattened, U_DC_decoded_from_bytes = bytes_roundtrip(U_DC_data, is_dc=True)
     V_DC_flattened, V_DC_decoded_from_bytes = bytes_roundtrip(V_DC_data, is_dc=True)
 
-    # # 检查解码结果是否与原始数据一致
+    # # 查看資料並驗證
     # print("Y AC data encoding =", Y_AC_flattened)
     # print("Y AC data decoding =", Y_AC_decoded_from_bytes)
     # print("U AC data encoding =", U_AC_flattened)
