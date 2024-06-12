@@ -147,5 +147,5 @@ def Huffman_code(Y_data, U_data, V_data):
 # V_data = [[[1, 4], [2, 3], [1, 0]], [[1, 5], [0, 0]]]  # Example RLE data for V component
 
 # jpeg_header, merged_encoded_data = Huffman_code(Y_data, U_data, V_data)
-# print(jpeg_header)
+# print(y)
 # print(merged_encoded_data)

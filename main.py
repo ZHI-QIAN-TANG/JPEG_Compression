@@ -94,8 +94,7 @@ import Zigzag as Z
 import RLC
 import DPCM
 import AC_DC_tree_DHT
-import Huffman_coding_ac
-import Huffman_coding_dc
+import Huffman_coding
 import header as h
 
 '''
@@ -224,10 +223,11 @@ def generate_encoded_data(image_path):
     UDPCM = DPCM.DPCM(UDCs)
     VDPCM = DPCM.DPCM(VDCs)
 
-    dc_jpeg_header, dc_merged_encoded_data = Huffman_coding_dc.Huffman_code(YDPCM,UDPCM,VDPCM)
-    #print("dc_jpeg_header" , dc_jpeg_header)
-    #print("dc_merged_encoded_data" , dc_merged_encoded_data)
-    ac_jpeg_header, ac_merged_encoded_data = Huffman_coding_ac.Huffman_code(YRLs,URLs,VRLs)
+    # dc_jpeg_header, dc_merged_encoded_data = Huffman_coding_dc.Huffman_code(YDPCM,UDPCM,VDPCM)
+    # #print("dc_jpeg_header" , dc_jpeg_header)
+    # #print("dc_merged_encoded_data" , dc_merged_encoded_data)
+    # ac_jpeg_header, ac_merged_encoded_data = Huffman_coding_ac.Huffman_code(YRLs,URLs,VRLs)
+    Y_AC_codebook_bytes,Y_AC_encoded_data_bytes,U_AC_codebook_bytes,U_AC_encoded_data_bytes,V_AC_codebook_bytes,V_AC_encoded_data_bytes,Y_DC_codebook_bytes,Y_DC_encoded_data_bytes,U_DC_codebook_bytes,U_DC_encoded_data_bytes,V_DC_codebook_bytes,V_DC_encoded_data_bytes = Huffman_coding.Huffman_coding(YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs)
     #print("ac_jpeg_header" , ac_jpeg_header)
     #print("ac_merged_encoded_data" , ac_merged_encoded_data)
 
@@ -237,7 +237,7 @@ def generate_encoded_data(image_path):
     ##需要進入標頭的內容:
     #compressed_data = 為ACDC的二元流碼
     #ACDCDHT = 為ACDC的霍夫碼標頭資料
-    return dc_jpeg_header, dc_merged_encoded_data,ac_jpeg_header, ac_merged_encoded_data
+    # return dc_jpeg_header, dc_merged_encoded_data,ac_jpeg_header, ac_merged_encoded_data
     
 '''
 def write_jpeg_file(encoded_data, output_file):
