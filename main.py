@@ -225,11 +225,11 @@ def generate_encoded_data(image_path):
     VDPCM = DPCM.DPCM(VDCs)
 
     dc_jpeg_header, dc_merged_encoded_data = Huffman_coding_dc.Huffman_code(YDPCM,UDPCM,VDPCM)
-    print("dc_jpeg_header" , dc_jpeg_header)
-    print("dc_merged_encoded_data" , dc_merged_encoded_data)
+    #print("dc_jpeg_header" , dc_jpeg_header)
+    #print("dc_merged_encoded_data" , dc_merged_encoded_data)
     ac_jpeg_header, ac_merged_encoded_data = Huffman_coding_ac.Huffman_code(YRLs,URLs,VRLs)
-    print("ac_jpeg_header" , ac_jpeg_header)
-    print("ac_merged_encoded_data" , ac_merged_encoded_data)
+    #print("ac_jpeg_header" , ac_jpeg_header)
+    #print("ac_merged_encoded_data" , ac_merged_encoded_data)
 
     # print("ac_huffman_tree = " ,ac_huffman_tree)
     # print("dc_huffman_tree = " ,dc_huffman_tree)
@@ -237,7 +237,7 @@ def generate_encoded_data(image_path):
     ##需要進入標頭的內容:
     #compressed_data = 為ACDC的二元流碼
     #ACDCDHT = 為ACDC的霍夫碼標頭資料
-    
+    return dc_jpeg_header, dc_merged_encoded_data,ac_jpeg_header, ac_merged_encoded_data
     
 '''
 def write_jpeg_file(encoded_data, output_file):
@@ -263,18 +263,19 @@ def main():
     image_path = "test2.jpg"
     output_jpeg = "output.jpg"
     # 假設您已經實現了將圖片進行編碼並生成編碼後的資料的函數
-    #encoded_data,ACHtable,DCHtable = generate_encoded_data(image_path)
+    DCHtable,DC_Data,ACHtable,AC_Data = generate_encoded_data(image_path)
     
     #print(h.save_jpeg_header(output_jpeg, 400, 600,,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs))
-    generate_encoded_data(image_path)
-    '''
-    if encoded_data:
-        print(f"Encoded data size: {len(encoded_data)} bytes")
+    #generate_encoded_data(image_path)
+    
+    if (DCHtable,DC_Data,ACHtable,AC_Data):
+        print("start encode")
         # 將編碼後的資料寫入 JPEG 檔案中
-        h.save_jpeg_header(output_jpeg, 400, 600)
+        h.save_jpeg_header(output_jpeg, 400, 600,DCHtable,DC_Data,ACHtable,AC_Data)
+        print(f"JPEG file written: {output_jpeg}")
     else:
         print("Failed to generate encoded data.")
-    '''
+    
 
 if __name__ == "__main__":
     main()

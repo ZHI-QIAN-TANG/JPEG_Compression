@@ -1,8 +1,7 @@
 import Huffman_coding_ac as Ha
 import Huffman_coding_dc as Hd
 
-
-def generate_jpeg_header(width, height,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs):
+def generate_jpeg_header(width, height, dc_jpeg_header, ac_jpeg_header, dc_merged_encoded_data, ac_merged_encoded_data):
     # JPEG標頭常量部分
     SOI = b'\xFF\xD8'  # Start of Image
     APP0 = b'\xFF\xE0'  # Application Marker
@@ -29,7 +28,7 @@ def generate_jpeg_header(width, height,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs):
         b'\x02\x11\x01'  # Cb分量（ID：2，取樣係數：1x1，量化表ID：1）
         b'\x03\x11\x01'  # Cr分量（ID：3，取樣係數：1x1，量化表ID：1）
     )
-    
+
     # 定義DQT段（Define Quantization Table）
     DQT_Y = b'\xFF\xDB'  # Define Quantization Table
     dqt_length_Y = b'\x00\x43'  # 段長度
@@ -57,22 +56,7 @@ def generate_jpeg_header(width, height,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs):
         99, 99, 99, 99, 99, 99, 99, 99,
         99, 99, 99, 99, 99, 99, 99, 99,
         99, 99, 99, 99, 99, 99, 99, 99])
-    '''
-    DHT_dc = b'\xFF\xC4'  # Define Huffman Table
-    dht_dc_length = b'\x00\x1F'  # 段長度
-    dht_dc_info = b'\x00'  # 表信息
-    huffman_table_dc = bytes.fromhex('001f0000010501010101010100000000000000808182838485868788898a8b')
-    '''
-    DHT_dc = Hd.Huffman_code(YDPCM,UDPCM,VDPCM)
-    
-    '''
-    DHT_ac = b'\xFF\xC4' 
-    dht_ac_length = b'\x00\xB5' 
-    dht_ac_info = b'\x10'
-    huffman_table_ac = bytes.fromhex('00281001010101000300020202020204000000808f817f7e82837d847c8586877a7b898a79888b8d')
-    '''
-    DHT_ac = Ha.Huffman_code(YRLs,URLs,VRLs)
-    
+
     # 定義SOS段（Start Of Scan）
     SOS = b'\xFF\xDA'
     sos_length = b'\x00\x0C'  # 段長度
@@ -93,21 +77,22 @@ def generate_jpeg_header(width, height,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs):
     header = (
         SOI +
         APP0 + length + JFIF + version + units + x_density + y_density + x_thumb + y_thumb +
-        SOF0 + sof_length + precision + height_bytes + width_bytes + num_components + components +
         DQT_Y + dqt_length_Y + dqt_info_Y + q_table_Y +
         DQT_C + dqt_length_C + dqt_info_C + q_table_C +
-        DHT_dc + DHT_ac + 
-        SOS + sos_length + num_sos_components + sos_components + start_spectral + end_spectral + approx_high +
+        SOF0 + sof_length + precision + height_bytes + width_bytes + num_components + components +
+        
+        SOS + sos_length + num_sos_components + sos_components + start_spectral + end_spectral + approx_high +dc_jpeg_header + ac_jpeg_header +
+        dc_merged_encoded_data + ac_merged_encoded_data +
         EOI
     )
 
     return header
 
-def save_jpeg_header(filename, width, height,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs):
-    header = generate_jpeg_header(width, height,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs)
+def save_jpeg_header(filename, width, height, dc_jpeg_header, ac_jpeg_header, dc_merged_encoded_data, ac_merged_encoded_data):
+    header = generate_jpeg_header(width, height, dc_jpeg_header, ac_jpeg_header, dc_merged_encoded_data, ac_merged_encoded_data)
     with open(filename, 'wb') as f:
         f.write(header)
     return header
 
 # 用例
-#print(save_jpeg_header('headertmp.jpg', 400, 600))
+#print(save_jpeg_header('headertmp.jpg', 600, 400,dc_jpeg_header, ac_jpeg_header, dc_merged_encoded_data, ac_merged_encoded_data))

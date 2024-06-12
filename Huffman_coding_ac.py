@@ -123,7 +123,23 @@ def Huffman_code(Y_data, U_data, V_data):
     # 合并YUV二进制编码数据
     merged_encoded_data = y_huffman_encoded_data + u_huffman_encoded_data + v_huffman_encoded_data
 
-    return jpeg_header, merged_encoded_data
+    def binary_to_hex(binary_str):
+        # 補零，使二進制字符串長度為8的倍數
+        while len(binary_str) % 8 != 0:
+            binary_str = '0' + binary_str
+        
+        # 將二進制字符串轉換為十六進制字符串
+        hex_str = hex(int(binary_str, 2))[2:].upper()
+        
+        # 確保十六進制字符串的長度是偶數
+        if len(hex_str) % 2 != 0:
+            hex_str = '0' + hex_str
+        hex_bytes = bytes.fromhex(hex_str)
+        return hex_bytes
+    
+    y = binary_to_hex(merged_encoded_data)
+    #新增轉換十六進制，x為原本的merged_encoded_data
+    return jpeg_header, y
 
 # # Example usage:
 # Y_data = [[[3, 1], [2, 5], [1, 0]], [[1, 2], [0, 0]]]  # Example RLE data for Y component
