@@ -228,6 +228,23 @@ def generate_encoded_data(image_path):
     # #print("dc_merged_encoded_data" , dc_merged_encoded_data)
     # ac_jpeg_header, ac_merged_encoded_data = Huffman_coding_ac.Huffman_code(YRLs,URLs,VRLs)
     Y_AC_codebook_bytes,Y_AC_encoded_data_bytes,U_AC_codebook_bytes,U_AC_encoded_data_bytes,V_AC_codebook_bytes,V_AC_encoded_data_bytes,Y_DC_codebook_bytes,Y_DC_encoded_data_bytes,U_DC_codebook_bytes,U_DC_encoded_data_bytes,V_DC_codebook_bytes,V_DC_encoded_data_bytes = Huffman_coding.Huffman_coding(YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs)
+    '''
+    print("1:",Y_AC_codebook_bytes,"\n")
+    print("2:",U_AC_codebook_bytes,"\n")
+    print("3:",V_AC_codebook_bytes,"\n")
+    print("4:",Y_DC_codebook_bytes,"\n")
+    print("5:",U_DC_codebook_bytes,"\n")
+    print("6:",V_DC_codebook_bytes,"\n")
+    '''
+    '''
+    print("1:",Y_AC_encoded_data_bytes,"\n")
+    print("2:",U_AC_encoded_data_bytes,"\n")
+    print("3:",V_AC_encoded_data_bytes,"\n")
+    print("4:",Y_DC_encoded_data_bytes,"\n")
+    print("5:",U_DC_encoded_data_bytes,"\n")
+    print("6:",V_DC_encoded_data_bytes,"\n")
+    '''
+    return Y_AC_codebook_bytes,Y_AC_encoded_data_bytes,U_AC_codebook_bytes,U_AC_encoded_data_bytes,V_AC_codebook_bytes,V_AC_encoded_data_bytes,Y_DC_codebook_bytes,Y_DC_encoded_data_bytes,U_DC_codebook_bytes,U_DC_encoded_data_bytes,V_DC_codebook_bytes,V_DC_encoded_data_bytes
     #print("ac_jpeg_header" , ac_jpeg_header)
     #print("ac_merged_encoded_data" , ac_merged_encoded_data)
 
@@ -262,19 +279,17 @@ def write_jpeg_file(encoded_data, output_file):
 def main():
     image_path = "test2.jpg"
     output_jpeg = "output.jpg"
-    # 假設您已經實現了將圖片進行編碼並生成編碼後的資料的函數
-    DCHtable,DC_Data,ACHtable,AC_Data = generate_encoded_data(image_path)
+
+    Y_AC_codebook_bytes,Y_AC_encoded_data_bytes,U_AC_codebook_bytes,U_AC_encoded_data_bytes,V_AC_codebook_bytes,V_AC_encoded_data_bytes,Y_DC_codebook_bytes,Y_DC_encoded_data_bytes,U_DC_codebook_bytes,U_DC_encoded_data_bytes,V_DC_codebook_bytes,V_DC_encoded_data_bytes = generate_encoded_data(image_path)
     
     #print(h.save_jpeg_header(output_jpeg, 400, 600,,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs))
     #generate_encoded_data(image_path)
     
-    if (DCHtable,DC_Data,ACHtable,AC_Data):
+    header = h.generate_jpeg_header(600, 400, Y_AC_codebook_bytes,Y_AC_encoded_data_bytes,U_AC_codebook_bytes,U_AC_encoded_data_bytes,V_AC_codebook_bytes,V_AC_encoded_data_bytes,Y_DC_codebook_bytes,Y_DC_encoded_data_bytes,U_DC_codebook_bytes,U_DC_encoded_data_bytes,V_DC_codebook_bytes,V_DC_encoded_data_bytes)
+    with open(output_jpeg, 'wb') as f:
         print("start encode")
-        # 將編碼後的資料寫入 JPEG 檔案中
-        h.save_jpeg_header(output_jpeg, 400, 600,DCHtable,DC_Data,ACHtable,AC_Data)
-        print(f"JPEG file written: {output_jpeg}")
-    else:
-        print("Failed to generate encoded data.")
+        f.write(header)
+        print("end encode")
     
 
 if __name__ == "__main__":

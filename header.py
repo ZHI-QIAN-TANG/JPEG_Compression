@@ -1,7 +1,7 @@
-import Huffman_coding_ac as Ha
-import Huffman_coding_dc as Hd
+import pickle
+import struct
 
-def generate_jpeg_header(width, height, dc_jpeg_header, ac_jpeg_header, dc_merged_encoded_data, ac_merged_encoded_data):
+def generate_jpeg_header(width, height, Y_AC_codebook_bytes,Y_AC_encoded_data_bytes,U_AC_codebook_bytes,U_AC_encoded_data_bytes,V_AC_codebook_bytes,V_AC_encoded_data_bytes,Y_DC_codebook_bytes,Y_DC_encoded_data_bytes,U_DC_codebook_bytes,U_DC_encoded_data_bytes,V_DC_codebook_bytes,V_DC_encoded_data_bytes):
     # JPEG標頭常量部分
     SOI = b'\xFF\xD8'  # Start of Image
     APP0 = b'\xFF\xE0'  # Application Marker
@@ -56,10 +56,35 @@ def generate_jpeg_header(width, height, dc_jpeg_header, ac_jpeg_header, dc_merge
         99, 99, 99, 99, 99, 99, 99, 99,
         99, 99, 99, 99, 99, 99, 99, 99,
         99, 99, 99, 99, 99, 99, 99, 99])
-
+ 
+    def generate_dht_segment(huffman_data, table_class, table_id):
+        # Prepare DHT segment header
+        segment = b'\xFF\xC4'
+        ac_huffman_table_data = pickle.loads(huffman_data)
+        # Segment length (excluding first two bytes)
+        segment_length = len(ac_huffman_table_data) + 17
+        segment += segment_length.to_bytes(2, byteorder='big')
+        # Table class (0 for DC, 1 for AC) and Huffman table index
+        table_class_index = (table_class << 4) | table_id
+        segment += bytes([table_class_index])
+        return segment 
+    y_dc_table = generate_dht_segment(Y_DC_codebook_bytes, table_class=0, table_id=0)
+    y_ac_table = generate_dht_segment(Y_AC_codebook_bytes, table_class=1, table_id=0)
+    u_dc_table = generate_dht_segment(U_DC_codebook_bytes, table_class=0, table_id=1)
+    u_ac_table = generate_dht_segment(U_AC_codebook_bytes, table_class=1, table_id=1)
+    v_dc_table = generate_dht_segment(V_DC_codebook_bytes, table_class=0, table_id=2)
+    v_ac_table = generate_dht_segment(V_AC_codebook_bytes, table_class=1, table_id=2)
+    '''
+    print("1:",y_dc_table,"\n")
+    print("1:",y_ac_table,"\n")
+    print("1:",u_ac_table,"\n")
+    print("1:",u_ac_table,"\n")
+    print("1:",v_dc_table,"\n")
+    print("1:",v_ac_table,"\n")
+    '''
     # 定義SOS段（Start Of Scan）
     SOS = b'\xFF\xDA'
-    sos_length = b'\x00\x0C'  # 段長度
+    sos_length = b'\x00\x0C'  # 段長度 or 0C
     num_sos_components = b'\x03'  # 分量數
     sos_components = (
         b'\x01\x00'  # Y分量
@@ -80,19 +105,17 @@ def generate_jpeg_header(width, height, dc_jpeg_header, ac_jpeg_header, dc_merge
         DQT_Y + dqt_length_Y + dqt_info_Y + q_table_Y +
         DQT_C + dqt_length_C + dqt_info_C + q_table_C +
         SOF0 + sof_length + precision + height_bytes + width_bytes + num_components + components +
+        y_dc_table + u_dc_table + v_dc_table +y_ac_table + u_ac_table + v_ac_table +
+        SOS + sos_length + num_sos_components + sos_components + start_spectral + end_spectral + approx_high +
         
-        SOS + sos_length + num_sos_components + sos_components + start_spectral + end_spectral + approx_high +dc_jpeg_header + ac_jpeg_header +
-        dc_merged_encoded_data + ac_merged_encoded_data +
+        Y_DC_encoded_data_bytes + Y_AC_encoded_data_bytes + U_DC_encoded_data_bytes + U_AC_encoded_data_bytes + V_DC_encoded_data_bytes + V_AC_encoded_data_bytes + 
+        
         EOI
     )
 
     return header
 
-def save_jpeg_header(filename, width, height, dc_jpeg_header, ac_jpeg_header, dc_merged_encoded_data, ac_merged_encoded_data):
-    header = generate_jpeg_header(width, height, dc_jpeg_header, ac_jpeg_header, dc_merged_encoded_data, ac_merged_encoded_data)
-    with open(filename, 'wb') as f:
-        f.write(header)
-    return header
+
 
 # 用例
 #print(save_jpeg_header('headertmp.jpg', 600, 400,dc_jpeg_header, ac_jpeg_header, dc_merged_encoded_data, ac_merged_encoded_data))

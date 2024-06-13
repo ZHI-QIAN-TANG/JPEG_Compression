@@ -112,7 +112,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     Y_DC_codebook_bytes, Y_DC_encoded_data_bytes = serialize_data(Y_DC_codebook, Y_DC_encoded)
     U_DC_codebook_bytes, U_DC_encoded_data_bytes = serialize_data(U_DC_codebook, U_DC_encoded)
     V_DC_codebook_bytes, V_DC_encoded_data_bytes = serialize_data(V_DC_codebook, V_DC_encoded)
-
+    '''
     # 印出霍夫曼編碼與資料:(codebook:霍夫曼表、encoded:資料)
     print("Y_AC_codebook_bytes:", Y_AC_codebook_bytes)
     print("Y_AC_encoded_data_bytes:", Y_AC_encoded_data_bytes)
@@ -127,7 +127,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     print("U_DC_encoded_data_bytes:", U_DC_encoded_data_bytes)
     print("V_DC_codebook_bytes:", V_DC_codebook_bytes)
     print("V_DC_encoded_data_bytes:", V_DC_encoded_data_bytes)
-
+    '''
     print()
     # 對AC數據進行霍夫曼編碼和解碼，驗證序列化和反序列化
     Y_AC_flattened, Y_AC_decoded_from_bytes = bytes_roundtrip(Y_AC_data)
@@ -153,13 +153,14 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     # print("U DC data decoding =", U_DC_decoded_from_bytes)
     # print("V DC data encoding =", V_DC_flattened)
     # print("V DC data decoding =", V_DC_decoded_from_bytes)
+    '''
     print("Y AC data check", Y_AC_flattened == Y_AC_decoded_from_bytes)
     print("U AC data check", U_AC_flattened == U_AC_decoded_from_bytes)
     print("V AC data check", V_AC_flattened == V_AC_decoded_from_bytes)
     print("Y DC data check", Y_DC_flattened == Y_DC_decoded_from_bytes)
     print("U DC data check", U_DC_flattened == U_DC_decoded_from_bytes)
     print("V DC data check", V_DC_flattened == V_DC_decoded_from_bytes)
-
+    '''
     return Y_AC_codebook_bytes,Y_AC_encoded_data_bytes,U_AC_codebook_bytes,U_AC_encoded_data_bytes,V_AC_codebook_bytes,V_AC_encoded_data_bytes,Y_DC_codebook_bytes,Y_DC_encoded_data_bytes,U_DC_codebook_bytes,U_DC_encoded_data_bytes,V_DC_codebook_bytes,V_DC_encoded_data_bytes
 
 
