@@ -106,7 +106,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
         
         return flattened_data, decoded_data_from_bytes, codebook_bytes, encoded_data_bytes
 
-    # # 示例使用数据
+    # # 範例
     # Y_AC_data = [[[3, 1], [2, 5], [1, 0]], [[1, 2], [0, 0]]]
     # U_AC_data = [[[2, 3], [3, 4], [1, 0]], [[1, 1], [0, 0]]]
     # V_AC_data = [[[1, 4], [2, 3], [1, 0]], [[1, 5], [0, 0]]]
@@ -115,17 +115,16 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     # U_DC_data = [5, -1, 2, 1, 0, 0, 3]
     # V_DC_data = [3, 1, -1, 2, 0, 0, -2]
 
-    # 对AC数据进行霍夫曼编码和解码，并获取霍夫曼编码表和编码数据的字节表示
+    # 對AC數據進行霍夫曼編碼與解碼，並獲取霍夫曼表和數據
     Y_AC_flattened, Y_AC_decoded_from_bytes, Y_AC_codebook_bytes, Y_AC_encoded_data_bytes = bytes_roundtrip(Y_AC_data)
     U_AC_flattened, U_AC_decoded_from_bytes, U_AC_codebook_bytes, U_AC_encoded_data_bytes = bytes_roundtrip(U_AC_data)
     V_AC_flattened, V_AC_decoded_from_bytes, V_AC_codebook_bytes, V_AC_encoded_data_bytes = bytes_roundtrip(V_AC_data)
 
-    # 对DC数据进行霍夫曼编码和解码，并获取霍夫曼编码表和编码数据的字节表示
+    # 對DC數據進行霍夫曼編碼與解碼，並獲取霍夫曼表和數據
     Y_DC_flattened, Y_DC_decoded_from_bytes, Y_DC_codebook_bytes, Y_DC_encoded_data_bytes = bytes_roundtrip(Y_DC_data, is_dc=True)
     U_DC_flattened, U_DC_decoded_from_bytes, U_DC_codebook_bytes, U_DC_encoded_data_bytes = bytes_roundtrip(U_DC_data, is_dc=True)
     V_DC_flattened, V_DC_decoded_from_bytes, V_DC_codebook_bytes, V_DC_encoded_data_bytes = bytes_roundtrip(V_DC_data, is_dc=True)
 
-    # 打印霍夫曼编码表和编码数据的字节表示
     print("Y_AC_codebook_bytes:", Y_AC_codebook_bytes)
     print("Y_AC_encoded_data_bytes:", Y_AC_encoded_data_bytes)
     print("U_AC_codebook_bytes:", U_AC_codebook_bytes)
