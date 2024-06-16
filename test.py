@@ -134,7 +134,7 @@ def Huffman_coding(Y_DC_data, U_DC_data, V_DC_data, Y_AC_data, U_AC_data, V_AC_d
     assert Y_DC_flattened == Y_DC_decoded_from_bytes, "Y_DC data does not match after decoding"
     assert U_DC_flattened == UV_DC_decoded_from_bytes[:len(U_DC_flattened)], "U_DC data does not match after decoding"
     assert V_DC_flattened == UV_DC_decoded_from_bytes[len(U_DC_flattened):], "V_DC data does not match after decoding"
-
+    
     # 打印霍夫曼编码表和编码数据的字节表示
     print("Y_AC_codebook_bytes:", Y_AC_codebook_bytes)
     print("Y_AC_encoded_data_bytes:", Y_AC_encoded_data_bytes)
@@ -150,6 +150,7 @@ def Huffman_coding(Y_DC_data, U_DC_data, V_DC_data, Y_AC_data, U_AC_data, V_AC_d
 
     return Y_AC_codebook_bytes, Y_AC_encoded_data_bytes, UV_AC_codebook_bytes, UV_AC_encoded_data_bytes, Y_DC_codebook_bytes, Y_DC_encoded_data_bytes, UV_DC_codebook_bytes, UV_DC_encoded_data_bytes
 
+
 # 示例使用数据
 Y_AC_data = [[[3, 1], [2, 5], [1, 0]], [[1, 2], [0, 0]]]
 U_AC_data = [[[2, 3], [3, 4], [1, 0]], [[1, 1], [0, 0]]]
@@ -161,3 +162,4 @@ V_DC_data = [3, 1, -1, 2, 0, 0, -2]
 
 # 调用霍夫曼编码函数
 Huffman_coding(Y_DC_data, U_DC_data, V_DC_data, Y_AC_data, U_AC_data, V_AC_data)
+

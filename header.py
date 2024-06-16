@@ -1,7 +1,7 @@
 import pickle
-import struct
+import test
 
-def generate_jpeg_header(width, height, Y_AC_codebook_bytes,Y_AC_encoded_data_bytes,U_AC_codebook_bytes,U_AC_encoded_data_bytes,V_AC_codebook_bytes,V_AC_encoded_data_bytes,Y_DC_codebook_bytes,Y_DC_encoded_data_bytes,U_DC_codebook_bytes,U_DC_encoded_data_bytes,V_DC_codebook_bytes,V_DC_encoded_data_bytes):
+def generate_jpeg_header(width, height, Y_AC_codebook_bytes, Y_AC_encoded_data_bytes, UV_AC_codebook_bytes, UV_AC_encoded_data_bytes, Y_DC_codebook_bytes, Y_DC_encoded_data_bytes, UV_DC_codebook_bytes, UV_DC_encoded_data_bytes):
     # JPEG標頭常量部分
     SOI = b'\xFF\xD8'  # Start of Image
     APP0 = b'\xFF\xE0'  # Application Marker
@@ -70,10 +70,12 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,Y_AC_encoded_data_by
         return segment 
     y_dc_table = generate_dht_segment(Y_DC_codebook_bytes, table_class=0, table_id=0)
     y_ac_table = generate_dht_segment(Y_AC_codebook_bytes, table_class=1, table_id=0)
-    u_dc_table = generate_dht_segment(U_DC_codebook_bytes, table_class=0, table_id=1)
-    u_ac_table = generate_dht_segment(U_AC_codebook_bytes, table_class=1, table_id=1)
-    v_dc_table = generate_dht_segment(V_DC_codebook_bytes, table_class=0, table_id=2)
-    v_ac_table = generate_dht_segment(V_AC_codebook_bytes, table_class=1, table_id=2)
+    uv_dc_table = generate_dht_segment(UV_DC_codebook_bytes, table_class=0, table_id=1)
+    uv_ac_table = generate_dht_segment(UV_AC_codebook_bytes, table_class=1, table_id=1)
+    #u_dc_table = generate_dht_segment(UV_DC_codebook_bytes, table_class=0, table_id=1)
+    #u_ac_table = generate_dht_segment(UV_AC_codebook_bytes, table_class=1, table_id=1)
+    #v_dc_table = generate_dht_segment(UV_DC_codebook_bytes, table_class=0, table_id=2)
+    #v_ac_table = generate_dht_segment(UV_AC_codebook_bytes, table_class=1, table_id=2)
     '''
     print("1:",y_dc_table,"\n")
     print("1:",y_ac_table,"\n")
@@ -84,7 +86,7 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,Y_AC_encoded_data_by
     '''
     # 定義SOS段（Start Of Scan）
     SOS = b'\xFF\xDA'
-    sos_length = b'\x00\x0C'  # 段長度 or 0C
+    sos_length = b'\x00\x0E'  # 段長度 or 0C
     num_sos_components = b'\x03'  # 分量數
     sos_components = (
         b'\x01\x00'  # Y分量
@@ -105,10 +107,10 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,Y_AC_encoded_data_by
         DQT_Y + dqt_length_Y + dqt_info_Y + q_table_Y +
         DQT_C + dqt_length_C + dqt_info_C + q_table_C +
         SOF0 + sof_length + precision + height_bytes + width_bytes + num_components + components +
-        y_dc_table + u_dc_table + v_dc_table +y_ac_table + u_ac_table + v_ac_table +
+        y_dc_table + uv_dc_table +y_ac_table + uv_ac_table +
         SOS + sos_length + num_sos_components + sos_components + start_spectral + end_spectral + approx_high +
         
-        Y_DC_encoded_data_bytes + Y_AC_encoded_data_bytes + U_DC_encoded_data_bytes + U_AC_encoded_data_bytes + V_DC_encoded_data_bytes + V_AC_encoded_data_bytes + 
+        Y_DC_encoded_data_bytes + Y_AC_encoded_data_bytes + UV_DC_encoded_data_bytes + UV_AC_encoded_data_bytes  + 
         
         EOI
     )

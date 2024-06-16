@@ -48,7 +48,7 @@ def binary_to_hex(binary_str):
     return hex_bytes
 
 # 示例二進制字符串
-binary_str = "00000010"
+binary_str = ""
 result_bytes = binary_to_hex(binary_str)
 print(result_bytes)
 '''
@@ -104,73 +104,7 @@ print(generate_dht_segment(x, table_class=0, table_id=0))
 
 print(generate_dht_segment(y, table_class=0, table_id=0))
 '''
-'''
-
-def generate_dht_segment(hex_data, table_class, table_id):
-        # 解序列化十六進制位元流
-        huffman_dict = pickle.loads(hex_data)
-
-        # 構建位長分佈和符號值
-        lengths = [0] * 16
-        symbol_to_code = {}
-
-        # 構建symbol_to_code
-        for key, code in huffman_dict.items():
-            symbol_to_code[key] = code
-
-        # 計算每個長度的符號數量
-        for code in symbol_to_code.values():
-            length = len(code)
-            lengths[length - 1] += 1
-
-        # 構建符號值（根據碼長度排序）
-        symbols = sorted(symbol_to_code.keys(), key=lambda x: len(symbol_to_code[x]))
-
-        # 構建DHT段
-        dht_segment = bytearray()
-        dht_segment.extend(struct.pack('>H', 0xFFC4))  # DHT段標記
-        dht_segment.extend(struct.pack('>H', 3 + 16 + len(symbols)))  # 段長度
-
-        # 表類型
-        table_info = (table_class << 4) | table_id
-        dht_segment.append(table_info)  # 表信息
-
-        dht_segment.extend(lengths)  # 位長分佈
-
-        for symbol in symbols:
-            if isinstance(symbol, tuple):
-                for part in symbol:
-                    dht_segment.append(part & 0xFF)  # 確保符號是單字節
-            else:
-                dht_segment.append(symbol & 0xFF)  # 確保符號是單字節
-
-        return bytes(dht_segment)  
-    y_dc_table = generate_dht_segment(Y_DC_codebook_bytes, table_class=0, table_id=0)
-    y_ac_table = generate_dht_segment(Y_AC_codebook_bytes, table_class=1, table_id=0)
-    u_dc_table = generate_dht_segment(U_DC_codebook_bytes, table_class=0, table_id=1)
-    u_ac_table = generate_dht_segment(U_AC_codebook_bytes, table_class=1, table_id=1)
-    v_dc_table = generate_dht_segment(V_DC_codebook_bytes, table_class=0, table_id=2)
-    v_ac_table = generate_dht_segment(V_AC_codebook_bytes, table_class=1, table_id=2)
-    
-'''
-'''
-import pickle
-def generate_dht_segment(huffman_data, table_class, table_index):
-        # Prepare DHT segment header
-        segment = b'\xFF\xC4'
-        ac_huffman_table_data = pickle.loads(huffman_data)
-        # Segment length (excluding first two bytes)
-        segment_length = len(ac_huffman_table_data) + 17
-        segment += segment_length.to_bytes(2, byteorder='big')
-        # Table class (0 for DC, 1 for AC) and Huffman table index
-        table_class_index = (table_class << 4) | table_index
-        segment += bytes([table_class_index])
-        return segment
 
 
 
-x=b'\x80\x04\x95\x15\xa7\x00\x00\x00\x00\x00\x00X\x0e\xa7\x00\x00\x94.'  
-print(generate_dht_segment(x, table_class=1, table_index=0))
-# Now you can use dht_segment in your JPEG file header
 
-'''

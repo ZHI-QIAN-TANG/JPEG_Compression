@@ -14,3 +14,9 @@ with open('pro.jpg', 'rb') as file:
     print(image_data)
     '''
 #用來觀察圖片位元流資料用
+'''
+with open('scan_jpeg', 'wb') as f:
+        print("start encode")
+        f.write(header)
+        print("end encode")
+'''
