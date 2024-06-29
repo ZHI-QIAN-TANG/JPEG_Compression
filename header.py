@@ -60,9 +60,9 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes
     def generate_dht_segment(huffman_data, table_class, table_id):
         # Prepare DHT segment header
         segment = b'\xFF\xC4'
-        ac_huffman_table_data = pickle.loads(huffman_data)
+        # ac_huffman_table_data = pickle.loads(huffman_data)
         # Segment length (excluding first two bytes)
-        segment_length = len(ac_huffman_table_data) + 17
+        segment_length = len(segment) + 17
         segment += segment_length.to_bytes(2, byteorder='big')
         # Table class (0 for DC, 1 for AC) and Huffman table index
         table_class_index = (table_class << 4) | table_id
