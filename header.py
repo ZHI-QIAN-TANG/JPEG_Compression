@@ -1,7 +1,7 @@
 import pickle
 import test
 
-def generate_jpeg_header(width, height, Y_AC_codebook_bytes, Y_AC_encoded_data_bytes, UV_AC_codebook_bytes, UV_AC_encoded_data_bytes, Y_DC_codebook_bytes, Y_DC_encoded_data_bytes, UV_DC_codebook_bytes, UV_DC_encoded_data_bytes):
+def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC):
     # JPEG標頭常量部分
     SOI = b'\xFF\xD8'  # Start of Image
     APP0 = b'\xFF\xE0'  # Application Marker
@@ -107,10 +107,10 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes, Y_AC_encoded_data_b
         DQT_Y + dqt_length_Y + dqt_info_Y + q_table_Y +
         DQT_C + dqt_length_C + dqt_info_C + q_table_C +
         SOF0 + sof_length + precision + height_bytes + width_bytes + num_components + components +
-        y_dc_table + uv_dc_table +y_ac_table + uv_ac_table +
+        y_dc_table + uv_dc_table + y_ac_table + uv_ac_table +
         SOS + sos_length + num_sos_components + sos_components + start_spectral + end_spectral + approx_high +
         
-        Y_DC_encoded_data_bytes + Y_AC_encoded_data_bytes + UV_DC_encoded_data_bytes + UV_AC_encoded_data_bytes  + 
+        encoded_bytes_Y_DC + encoded_bytes_Y_AC + encoded_bytes_U_DC + encoded_bytes_U_AC + encoded_bytes_V_DC + encoded_bytes_V_AC + 
         
         EOI
     )

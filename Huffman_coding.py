@@ -1,144 +1,122 @@
-import heapq
-from collections import defaultdict, Counter
-import pickle
+# DC 亮度霍夫曼表
+dc_luminance_table = bytes([
+    0x00,  # 0 個 1 位元的碼字
+    0x01,  # 1 個 2 位元的碼字
+    0x05,  # 5 個 3 位元的碼字
+    0x01,  # 1 個 4 位元的碼字
+    0x01,  # 1 個 5 位元的碼字
+    0x01,  # 1 個 6 位元的碼字
+    0x01,  # 1 個 7 位元的碼字
+    0x01,  # 1 個 8 位元的碼字
+    0x01,  # 1 個 9 位元的碼字
+    0x00,  # 0 個 10 位元的碼字
+    0x00,  # 0 個 11 位元的碼字
+    0x00,  # 0 個 12 位元的碼字
+    0x00,  # 0 個 13 位元的碼字
+    0x00,  # 0 個 14 位元的碼字
+    0x00,  # 0 個 15 位元的碼字
+    0x00,  # 0 個 16 位元的碼字
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B  # 符號
+])
 
-def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
+# DC 色度霍夫曼表
+dc_chrominance_table = bytes([
+    0x00,  # 0 個 1 位元的碼字
+    0x03,  # 3 個 2 位元的碼字
+    0x01,  # 1 個 3 位元的碼字
+    0x01,  # 1 個 4 位元的碼字
+    0x01,  # 1 個 5 位元的碼字
+    0x01,  # 1 個 6 位元的碼字
+    0x01,  # 1 個 7 位元的碼字
+    0x01,  # 1 個 8 位元的碼字
+    0x01,  # 1 個 9 位元的碼字
+    0x01,  # 1 個 10 位元的碼字
+    0x01,  # 1 個 11 位元的碼字
+    0x00,  # 0 個 12 位元的碼字
+    0x00,  # 0 個 13 位元的碼字
+    0x00,  # 0 個 14 位元的碼字
+    0x00,  # 0 個 15 位元的碼字
+    0x00,  # 0 個 16 位元的碼字
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B  # 符號
+])
 
-    class Node:
-        def __init__(self, symbol, freq):
-            self.symbol = symbol
-            self.freq = freq
-            self.left = None
-            self.right = None
+# AC 亮度霍夫曼表
+ac_luminance_table = bytes([
+    0x00,  # 0 個 1 位元的碼字
+    0x02,  # 2 個 2 位元的碼字
+    0x01,  # 1 個 3 位元的碼字
+    0x03,  # 3 個 4 位元的碼字
+    0x03,  # 3 個 5 位元的碼字
+    0x02,  # 2 個 6 位元的碼字
+    0x04,  # 4 個 7 位元的碼字
+    0x03,  # 3 個 8 位元的碼字
+    0x05,  # 5 個 9 位元的碼字
+    0x05,  # 5 個 10 位元的碼字
+    0x04,  # 4 個 11 位元的碼字
+    0x04,  # 4 個 12 位元的碼字
+    0x00,  # 0 個 13 位元的碼字
+    0x00,  # 0 個 14 位元的碼字
+    0x01,  # 1 個 15 位元的碼字
+    0x7D,  # 125 個 16 位元的碼字
+    # 符號 (162 bytes)
+    0x01, 0x02, 0x03, 0x00, 0x04, 0x11, 0x05, 0x12, 0x21, 0x31, 0x41, 0x06, 0x13, 0x51, 0x61, 0x07,
+    0x22, 0x71, 0x14, 0x32, 0x81, 0x91, 0xA1, 0x08, 0x23, 0x42, 0xB1, 0xC1, 0x15, 0x52, 0xD1, 0xF0,
+    0x24, 0x33, 0x62, 0x72, 0x82, 0x09, 0x0A, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x25, 0x26, 0x27, 0x28,
+    0x29, 0x2A, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49,
+    0x4A, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5A, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69,
+    0x6A, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89,
+    0x8A, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9A, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7,
+    0xA8, 0xA9, 0xAA, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBA, 0xC2, 0xC3, 0xC4, 0xC5,
+    0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7, 0xD8, 0xD9, 0xDA, 0xE1, 0xE2,
+    0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8,
+    0xF9, 0xFA
+])
 
-        def __lt__(self, other):
-            return self.freq < other.freq
+# AC 色度霍夫曼表
+ac_chrominance_table = bytes([
+    0x00,  # 0 個 1 位元的碼字
+    0x02,  # 2 個 2 位元的碼字
+    0x01,  # 1 個 3 位元的碼字
+    0x02,  # 2 個 4 位元的碼字
+    0x04,  # 4 個 5 位元的碼字
+    0x04,  # 4 個 6 位元的碼字
+    0x03,  # 3 個 7 位元的碼字
+    0x04,  # 4 個 8 位元的碼字
+    0x07,  # 7 個 9 位元的碼字
+    0x05,  # 5 個 10 位元的碼字
+    0x04,  # 4 個 11 位元的碼字
+    0x04,  # 4 個 12 位元的碼字
+    0x00,  # 0 個 13 位元的碼字
+    0x01,  # 1 個 14 位元的碼字
+    0x02,  # 2 個 15 位元的碼字
+    0x77,  # 119 個 16 位元的碼字
+    # 符號 (162 bytes)
+    0x00, 0x01, 0x02, 0x03, 0x11, 0x04, 0x05, 0x21, 0x31, 0x06, 0x12, 0x41, 0x51, 0x07, 0x61, 0x71,
+    0x13, 0x22, 0x32, 0x81, 0x08, 0x14, 0x42, 0x91, 0xA1, 0xB1, 0xC1, 0x09, 0x23, 0x33, 0x52, 0xF0,
+    0x15, 0x62, 0x72, 0xD1, 0x0A, 0x16, 0x24, 0x34, 0xE1, 0x25, 0xF1, 0x17, 0x18, 0x19, 0x1A, 0x26,
+    0x27, 0x28, 0x29, 0x2A, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48,
+    0x49, 0x4A, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5A, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+    0x69, 0x6A, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
+    0x88, 0x89, 0x8A, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9A, 0xA2, 0xA3, 0xA4, 0xA5,
+    0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBA, 0xC2, 0xC3,
+    0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7, 0xD8, 0xD9, 0xDA,
+    0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8,
+    0xF9, 0xFA
+])
 
-    def build_huffman_tree(frequencies):
-        heap = [Node(symbol, freq) for symbol, freq in frequencies.items()]
-        heapq.heapify(heap)
-        while len(heap) > 1:
-            node1 = heapq.heappop(heap)
-            node2 = heapq.heappop(heap)
-            merged = Node(None, node1.freq + node2.freq)
-            merged.left = node1
-            merged.right = node2
-            heapq.heappush(heap, merged)
-        return heap[0]
+# 打印表的長度以供驗證
+print("DC Luminance Table Length:", len(dc_luminance_table))
+print("DC Chrominance Table Length:", len(dc_chrominance_table))
+print("AC Luminance Table Length:", len(ac_luminance_table))
+print("AC Chrominance Table Length:", len(ac_chrominance_table))
 
-    def generate_huffman_codes(node, prefix="", codebook={}):
-        if node is not None:
-            if node.symbol is not None:
-                codebook[node.symbol] = prefix
-            generate_huffman_codes(node.left, prefix + "0", codebook)
-            generate_huffman_codes(node.right, prefix + "1", codebook)
-        return codebook
+# 如果需要，您可以將這些表轉換為十六進制字符串
+dc_luminance_hex = ''.join([f'\\x{b:02X}' for b in dc_luminance_table])
+dc_chrominance_hex = ''.join([f'\\x{b:02X}' for b in dc_chrominance_table])
+ac_luminance_hex = ''.join([f'\\x{b:02X}' for b in ac_luminance_table])
+ac_chrominance_hex = ''.join([f'\\x{b:02X}' for b in ac_chrominance_table])
 
-    def huffman_encoding(data, codebook):
-        return ''.join(codebook[symbol] for symbol in data)
-
-    def huffman_decoding(encoded_data, huffman_tree):
-        decoded_data = []
-        node = huffman_tree
-        for bit in encoded_data:
-            if bit == '0':
-                node = node.left
-            else:
-                node = node.right
-            if node.symbol is not None:
-                decoded_data.append(node.symbol)
-                node = huffman_tree
-        return decoded_data
-
-    def flatten_data(data):
-        return [tuple(item) for sublist in data for item in sublist]
-
-    def reduce_symbols(data, max_symbols=255):
-        frequencies = Counter(data)
-        if len(frequencies) > max_symbols:
-            most_common = frequencies.most_common(max_symbols)
-            reduced_data = []
-            symbol_map = {item[0]: idx for idx, item in enumerate(most_common)}
-            for item in data:
-                reduced_data.append(symbol_map.get(item, max_symbols))
-            return reduced_data, symbol_map
-        else:
-            return data, None
-
-    def encode_and_decode(data, is_dc=False):
-        if is_dc:
-            flattened_data = data
-        else:
-            flattened_data = flatten_data(data)
-        
-        # Reduce symbols to max 255 if necessary
-        flattened_data, symbol_map = reduce_symbols(flattened_data)
-        
-        frequencies = Counter(flattened_data)
-        huffman_tree = build_huffman_tree(frequencies)
-        codebook = generate_huffman_codes(huffman_tree)
-        encoded_data = huffman_encoding(flattened_data, codebook)
-        decoded_data = huffman_decoding(encoded_data, huffman_tree)
-        
-        if symbol_map:
-            reversed_symbol_map = {v: k for k, v in symbol_map.items()}
-            decoded_data = [reversed_symbol_map.get(item, item) for item in decoded_data]
-        
-        return flattened_data, encoded_data, decoded_data, codebook, huffman_tree
-
-    def serialize_data(codebook, encoded_data):
-        codebook_bytes = pickle.dumps(codebook)
-        encoded_data_bytes = pickle.dumps(encoded_data)
-        return codebook_bytes, encoded_data_bytes
-
-    def deserialize_data(codebook_bytes, encoded_data_bytes):
-        codebook = pickle.loads(codebook_bytes)
-        encoded_data = pickle.loads(encoded_data_bytes)
-        return codebook, encoded_data
-
-    def bytes_roundtrip(data, is_dc=False):
-        flattened_data, encoded_data, decoded_data, codebook, huffman_tree = encode_and_decode(data, is_dc)
-        codebook_bytes, encoded_data_bytes = serialize_data(codebook, encoded_data)
-        deserialized_codebook, deserialized_encoded_data = deserialize_data(codebook_bytes, encoded_data_bytes)
-        
-        huffman_tree = build_huffman_tree(Counter(flattened_data))  # Rebuild tree from frequencies
-        decoded_data_from_bytes = huffman_decoding(deserialized_encoded_data, huffman_tree)
-        
-        return flattened_data, decoded_data_from_bytes, codebook_bytes, encoded_data_bytes
-
-    # # 範例
-    # Y_AC_data = [[[3, 1], [2, 5], [1, 0]], [[1, 2], [0, 0]]]
-    # U_AC_data = [[[2, 3], [3, 4], [1, 0]], [[1, 1], [0, 0]]]
-    # V_AC_data = [[[1, 4], [2, 3], [1, 0]], [[1, 5], [0, 0]]]
-
-    # Y_DC_data = [23, -2, 3, 0, 0, -1, 5]
-    # U_DC_data = [5, -1, 2, 1, 0, 0, 3]
-    # V_DC_data = [3, 1, -1, 2, 0, 0, -2]
-
-    # 對AC數據進行霍夫曼編碼與解碼，並獲取霍夫曼表和數據
-    Y_AC_flattened, Y_AC_decoded_from_bytes, Y_AC_codebook_bytes, Y_AC_encoded_data_bytes = bytes_roundtrip(Y_AC_data)
-    U_AC_flattened, U_AC_decoded_from_bytes, U_AC_codebook_bytes, U_AC_encoded_data_bytes = bytes_roundtrip(U_AC_data)
-    V_AC_flattened, V_AC_decoded_from_bytes, V_AC_codebook_bytes, V_AC_encoded_data_bytes = bytes_roundtrip(V_AC_data)
-
-    # 對DC數據進行霍夫曼編碼與解碼，並獲取霍夫曼表和數據
-    Y_DC_flattened, Y_DC_decoded_from_bytes, Y_DC_codebook_bytes, Y_DC_encoded_data_bytes = bytes_roundtrip(Y_DC_data, is_dc=True)
-    U_DC_flattened, U_DC_decoded_from_bytes, U_DC_codebook_bytes, U_DC_encoded_data_bytes = bytes_roundtrip(U_DC_data, is_dc=True)
-    V_DC_flattened, V_DC_decoded_from_bytes, V_DC_codebook_bytes, V_DC_encoded_data_bytes = bytes_roundtrip(V_DC_data, is_dc=True)
-
-    print("Y_AC_codebook_bytes:", Y_AC_codebook_bytes)
-    print("Y_AC_encoded_data_bytes:", Y_AC_encoded_data_bytes)
-    print("U_AC_codebook_bytes:", U_AC_codebook_bytes)
-    print("U_AC_encoded_data_bytes:", U_AC_encoded_data_bytes)
-    print("V_AC_codebook_bytes:", V_AC_codebook_bytes)
-    print("V_AC_encoded_data_bytes:", V_AC_encoded_data_bytes)
-
-    print("Y_DC_codebook_bytes:", Y_DC_codebook_bytes)
-    print("Y_DC_encoded_data_bytes:", Y_DC_encoded_data_bytes)
-    print("U_DC_codebook_bytes:", U_DC_codebook_bytes)
-    print("U_DC_encoded_data_bytes:", U_DC_encoded_data_bytes)
-    print("V_DC_codebook_bytes:", V_DC_codebook_bytes)
-    print("V_DC_encoded_data_bytes:", V_DC_encoded_data_bytes)
-
-    return Y_AC_codebook_bytes,Y_AC_encoded_data_bytes,U_AC_codebook_bytes,U_AC_encoded_data_bytes,V_AC_codebook_bytes,V_AC_encoded_data_bytes,Y_DC_codebook_bytes,Y_DC_encoded_data_bytes,U_DC_codebook_bytes,U_DC_encoded_data_bytes,V_DC_codebook_bytes,V_DC_encoded_data_bytes
-
-
+print("\nDC Luminance Table (Hex):", dc_luminance_hex)
+print("DC Chrominance Table (Hex):", dc_chrominance_hex)
+print("AC Luminance Table (Hex):", ac_luminance_hex)
+print("AC Chrominance Table (Hex):", ac_chrominance_hex)

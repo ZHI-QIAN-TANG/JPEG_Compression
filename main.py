@@ -94,7 +94,6 @@ import Zigzag as Z
 import RLC
 import DPCM
 import AC_DC_tree_DHT
-import Huffman_coding
 import header as h
 import test as t
 
@@ -228,7 +227,7 @@ def generate_encoded_data(image_path):
     # #print("dc_jpeg_header" , dc_jpeg_header)
     # #print("dc_merged_encoded_data" , dc_merged_encoded_data)
     # ac_jpeg_header, ac_merged_encoded_data = Huffman_coding_ac.Huffman_code(YRLs,URLs,VRLs)
-    Y_AC_codebook_bytes, Y_AC_encoded_data_bytes, UV_AC_codebook_bytes, UV_AC_encoded_data_bytes, Y_DC_codebook_bytes, Y_DC_encoded_data_bytes, UV_DC_codebook_bytes, UV_DC_encoded_data_bytes = t.Huffman_coding(YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs)
+    Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC = t.Huffman_coding(YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs)
     '''
     print("1:",Y_AC_codebook_bytes,"\n")
     print("2:",U_AC_codebook_bytes,"\n")
@@ -245,8 +244,7 @@ def generate_encoded_data(image_path):
     print("5:",U_DC_encoded_data_bytes,"\n")
     print("6:",V_DC_encoded_data_bytes,"\n")
     '''
-    return Y_AC_codebook_bytes, Y_AC_encoded_data_bytes, UV_AC_codebook_bytes, UV_AC_encoded_data_bytes, Y_DC_codebook_bytes, Y_DC_encoded_data_bytes, UV_DC_codebook_bytes, UV_DC_encoded_data_bytes
-    #print("ac_jpeg_header" , ac_jpeg_header)
+    return  Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC
     #print("ac_merged_encoded_data" , ac_merged_encoded_data)
 
     # print("ac_huffman_tree = " ,ac_huffman_tree)
@@ -281,12 +279,12 @@ def main():
     image_path = "test2.jpg"
     output_jpeg = "output.jpg"
 
-    Y_AC_codebook_bytes, Y_AC_encoded_data_bytes, UV_AC_codebook_bytes, UV_AC_encoded_data_bytes, Y_DC_codebook_bytes, Y_DC_encoded_data_bytes, UV_DC_codebook_bytes, UV_DC_encoded_data_bytes = generate_encoded_data(image_path)
+    Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC = generate_encoded_data(image_path)
     
     #print(h.save_jpeg_header(output_jpeg, 400, 600,,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs))
     #generate_encoded_data(image_path)
     
-    header = h.generate_jpeg_header(600, 400, Y_AC_codebook_bytes, Y_AC_encoded_data_bytes, UV_AC_codebook_bytes, UV_AC_encoded_data_bytes, Y_DC_codebook_bytes, Y_DC_encoded_data_bytes, UV_DC_codebook_bytes, UV_DC_encoded_data_bytes)
+    header = h.generate_jpeg_header(600, 400, Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC)
     with open(output_jpeg, 'wb') as f:
         print("start encode")
         f.write(header)
