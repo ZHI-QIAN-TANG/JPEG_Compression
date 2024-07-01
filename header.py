@@ -68,10 +68,10 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes
         table_class_index = (table_class << 4) | table_id
         segment += bytes([table_class_index])
         return segment 
-    y_dc_table = generate_dht_segment(Y_DC_codebook_bytes, table_class=0, table_id=0)
-    y_ac_table = generate_dht_segment(Y_AC_codebook_bytes, table_class=1, table_id=0)
-    uv_dc_table = generate_dht_segment(UV_DC_codebook_bytes, table_class=0, table_id=1)
-    uv_ac_table = generate_dht_segment(UV_AC_codebook_bytes, table_class=1, table_id=1)
+    y_dc_table = Y_DC_codebook_bytes
+    y_ac_table = Y_AC_codebook_bytes
+    uv_dc_table = UV_DC_codebook_bytes
+    uv_ac_table = UV_AC_codebook_bytes
     #u_dc_table = generate_dht_segment(UV_DC_codebook_bytes, table_class=0, table_id=1)
     #u_ac_table = generate_dht_segment(UV_AC_codebook_bytes, table_class=1, table_id=1)
     #v_dc_table = generate_dht_segment(UV_DC_codebook_bytes, table_class=0, table_id=2)
@@ -107,7 +107,7 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes
         DQT_Y + dqt_length_Y + dqt_info_Y + q_table_Y +
         DQT_C + dqt_length_C + dqt_info_C + q_table_C +
         SOF0 + sof_length + precision + height_bytes + width_bytes + num_components + components +
-        y_dc_table + uv_dc_table + y_ac_table + uv_ac_table +
+        y_dc_table + y_ac_table + uv_dc_table + uv_ac_table +
         SOS + sos_length + num_sos_components + sos_components + start_spectral + end_spectral + approx_high +
         
         encoded_bytes_Y_DC + encoded_bytes_Y_AC + encoded_bytes_U_DC + encoded_bytes_U_AC + encoded_bytes_V_DC + encoded_bytes_V_AC + 
