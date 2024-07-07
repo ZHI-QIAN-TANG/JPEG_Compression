@@ -1,9 +1,55 @@
-import bitstring
 import math
 
-# Huffman tables (dc_luminance, dc_chrominance, ac_luminance, ac_chrominance) as provided in the document
+def get_category(value):
+    if value == 0:
+        return 0
+    return math.floor(math.log2(abs(value))) + 1
+
+def get_additional_bits(value):
+    if value == 0:
+        return ''
+    category = get_category(value)
+    if value > 0:
+        return f'{value:0{category}b}'
+    else:
+        return f'{(2 ** category + value):0{category}b}'
+
+def encode_dc(dc_values, huffman_table):
+    prev_dc = 0
+    bit_stream = ''
+    for dc in dc_values:
+        diff = dc - prev_dc
+        category = get_category(diff)
+        huffman_code = huffman_table[category]
+        additional_bits = get_additional_bits(diff)
+        bit_stream += huffman_code + additional_bits
+        prev_dc = dc
+    return bit_stream
+
+def encode_ac(ac_values, huffman_table):
+    bit_stream = ''
+    for block in ac_values:
+        for run, size in block:
+            if (run, size) == (0, 0):
+                bit_stream += huffman_table[(0, 0)]
+                break
+            huffman_code = huffman_table[(run, size)]
+            additional_bits = get_additional_bits(size)
+            bit_stream += huffman_code + additional_bits
+    return bit_stream
+
+def bitstream_to_hex(bit_stream):
+    hex_string = ''
+    for i in range(0, len(bit_stream), 8):
+        byte = bit_stream[i:i+8]
+        if len(byte) < 8:
+            byte = byte.ljust(8, '0')
+        hex_string += f'\\x{int(byte, 2):02x}'
+    return hex_string
+
+# DC 亮度表
 dc_luminance = {
-    0: '00', 1: '010', 2: '011', 3: '100', 4: '101', 5: '110',
+    0: '010', 1: '011', 2: '100', 3: '00', 4: '101', 5: '110',
     6: '1110', 7: '11110', 8: '111110', 9: '1111110', 10: '11111110', 11: '111111110'
 }
 
@@ -117,7 +163,7 @@ ac_chrominance = {
     (15, 10): '1111111111111110'
 }
 
-# 輸入資料
+# 输入数据
 Y_AC_data = [[[3, 1], [2, 5], [0, 0]], [[1, 2], [0, 0]]]
 U_AC_data = [[[2, 3], [3, 4], [0, 0]], [[1, 1], [0, 0]]]
 V_AC_data = [[[1, 4], [2, 3], [0, 0]], [[1, 5], [0, 0]]]
@@ -126,71 +172,27 @@ Y_DC_data = [23, -2, 3, 0, 0, -1, 5]
 U_DC_data = [5, -1, 2, 1, 0, 0, 3]
 V_DC_data = [3, 1, -1, 2, 0, 0, -2]
 
-def encode_dc(data, table):
-    bitstream = bitstring.BitStream()
-    for value in data:
-        category = len(bin(abs(value))[2:]) if value != 0 else 0
-        bitstream += bitstring.Bits(bin=table[category])
-        if value > 0:
-            bitstream += bitstring.Bits(uint=value, length=category)
-        elif value < 0:
-            bitstream += bitstring.Bits(uint=(1 << category) + value, length=category)
-    return bitstream
+# 编码
+encoded_bits_Y_DC = encode_dc(Y_DC_data, dc_luminance)
+encoded_bits_U_DC = encode_dc(U_DC_data, dc_chrominance)
+encoded_bits_V_DC = encode_dc(V_DC_data, dc_chrominance)
 
-def encode_ac(data, table):
-    bitstream = bitstring.BitStream()
-    for block in data:
-        for run, value in block:
-            if run == 0 and value == 0:  # EOB
-                bitstream += bitstring.Bits(bin=table[(0, 0)])
-                break
-            category = len(bin(abs(value))[2:])
-            bitstream += bitstring.Bits(bin=table[(run, category)])
-            if value > 0:
-                bitstream += bitstring.Bits(uint=value, length=category)
-            else:
-                bitstream += bitstring.Bits(uint=(1 << category) + value, length=category)
-    return bitstream
+encoded_bits_Y_AC = encode_ac(Y_AC_data, ac_luminance)
+encoded_bits_U_AC = encode_ac(U_AC_data, ac_chrominance)
+encoded_bits_V_AC = encode_ac(V_AC_data, ac_chrominance)
 
-def bitstream_to_hex(bitstream):
-    # 確保位元流長度是8的倍數
-    padding = 8 - (len(bitstream) % 8) if len(bitstream) % 8 != 0 else 0
-    if padding > 0:
-        bitstream += bitstring.Bits('0b' + '0' * padding)
-    
-    # 轉換為十六進制
-    hex_string = bitstream.hex
-    
-    # 格式化為 \x 格式
-    return ''.join('\\x' + hex_string[i:i+2] for i in range(0, len(hex_string), 2))
+# 转换为16进制
+encoded_bytes_Y_DC = bitstream_to_hex(encoded_bits_Y_DC)
+encoded_bytes_U_DC = bitstream_to_hex(encoded_bits_U_DC)
+encoded_bytes_V_DC = bitstream_to_hex(encoded_bits_V_DC)
 
-# 編碼 DC 資料
-encoded_Y_DC = encode_dc(Y_DC_data, dc_luminance)
-encoded_U_DC = encode_dc(U_DC_data, dc_chrominance)
-encoded_V_DC = encode_dc(V_DC_data, dc_chrominance)
+encoded_bytes_Y_AC = bitstream_to_hex(encoded_bits_Y_AC)
+encoded_bytes_U_AC = bitstream_to_hex(encoded_bits_U_AC)
+encoded_bytes_V_AC = bitstream_to_hex(encoded_bits_V_AC)
 
-# 編碼 AC 資料
-encoded_Y_AC = encode_ac(Y_AC_data, ac_luminance)
-encoded_U_AC = encode_ac(U_AC_data, ac_chrominance)
-encoded_V_AC = encode_ac(V_AC_data, ac_chrominance)
-
-# 轉換為十六進制格式
-encoded_bytes_Y_DC = bitstream_to_hex(encoded_Y_DC)
-encoded_bytes_U_DC = bitstream_to_hex(encoded_U_DC)
-encoded_bytes_V_DC = bitstream_to_hex(encoded_V_DC)
-encoded_bytes_Y_AC = bitstream_to_hex(encoded_Y_AC)
-encoded_bytes_U_AC = bitstream_to_hex(encoded_U_AC)
-encoded_bytes_V_AC = bitstream_to_hex(encoded_V_AC)
-
-# 打印結果
 print("Y DC:", encoded_bytes_Y_DC)
 print("U DC:", encoded_bytes_U_DC)
 print("V DC:", encoded_bytes_V_DC)
 print("Y AC:", encoded_bytes_Y_AC)
 print("U AC:", encoded_bytes_U_AC)
 print("V AC:", encoded_bytes_V_AC)
-
-Y_AC_codebook_bytes = b'\xff\xc4\x00\xb5\x10\x00\x02\x01\x03\x03\x02\x04\x03\x05\x05\x04\x04\x00\x00\x01}\x01\x02\x03\x00\x04\x11\x05\x12!1A\x06\x13Qa\x07"q\x142\x81\x91\xa1\x08#B\xb1\xc1\x15R\xd1\xf0$3br\x82\t\n\x16\x17\x18\x19\x1a%&\'()*456789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz\x83\x84\x85\x86\x87\x88\x89\x8a\x92\x93\x94\x95\x96\x97\x98\x99\x9a\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa'
-UV_AC_codebook_bytes = b'\xff\xc4\x00\xb5\x11\x00\x02\x01\x02\x04\x04\x03\x04\x07\x05\x04\x04\x00\x01\x02w\x00\x01\x02\x03\x11\x04\x05!1\x06\x12AQ\x07aq\x13"2\x81\x08\x14B\x91\xa1\xb1\xc1\t#3R\xf0\x15br\xd1\n\x16$4\xe1%\xf1\x17\x18\x19\x1a&\'()*56789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x92\x93\x94\x95\x96\x97\x98\x99\x9a\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa'
-Y_DC_codebook_bytes = b'\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b'
-UV_DC_codebook_bytes = b'\xff\xc4\x00\x1f\x01\x00\x03\x01\x01\x01\x01\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b'

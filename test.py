@@ -1,10 +1,11 @@
 import bitstring
 import codecs
+import math
 
 def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     # DC 亮度表
     dc_luminance = {
-        0: '00', 1: '010', 2: '011', 3: '100', 4: '101', 5: '110',
+        0: '010', 1: '011', 2: '100', 3: '00', 4: '101', 5: '110',
         6: '1110', 7: '11110', 8: '111110', 9: '1111110', 10: '11111110', 11: '111111110'
     }
 
@@ -118,46 +119,59 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
         (15, 10): '1111111111111110'
     }
     
-    def encode_value(value, category):
-        if category == 0:
-            return bitstring.BitStream()
-        abs_value = abs(value)
+    def get_category(value):
+        if value == 0:
+            return 0
+        return math.floor(math.log2(abs(value))) + 1
+
+    def get_additional_bits(value):
+        if value == 0:
+            return ''
+        category = get_category(value)
         if value > 0:
-            return bitstring.Bits(uint=abs_value, length=category)
+            return f'{value:0{category}b}'
         else:
-            return bitstring.Bits(uint=abs_value ^ ((1 << category) - 1), length=category)
+            return f'{(2 ** category + value):0{category}b}'
 
-    def encode_dc(data, table):
-        bitstream = bitstring.BitStream()
-        for value in data:
-            category = len(bin(abs(value))[2:]) if value != 0 else 0
-            bitstream += bitstring.Bits(bin=table[category])
-            bitstream += encode_value(value, category)
-        return bitstream
+    def encode_dc(dc_values, huffman_table):
+        prev_dc = 0
+        bit_stream = ''
+        for dc in dc_values:
+            diff = dc - prev_dc
+            category = get_category(diff)
+            huffman_code = huffman_table[category]
+            additional_bits = get_additional_bits(diff)
+            bit_stream += huffman_code + additional_bits
+            prev_dc = dc
+        return bit_stream
 
-    def encode_ac(data, table):
-        bitstream = bitstring.BitStream()
-        for block in data:
-            for run, value in block:
-                if run == 0 and value == 0:  # EOB
-                    bitstream += bitstring.Bits(bin=table[(0, 0)])
+    def encode_ac(ac_values, huffman_table):
+        bit_stream = ''
+        for block in ac_values:
+            run_length = 0
+            for coefficient in block:
+                run, size = coefficient
+                if coefficient == (0, 0):
+                    bit_stream += huffman_table[(0, 0)]
                     break
-                category = len(bin(abs(value))[2:])
-                bitstream += bitstring.Bits(bin=table[(run, category)])
-                bitstream += encode_value(value, category)
-        return bitstream
+                while run > 15:
+                    bit_stream += huffman_table[(15, 0)]  # ZRL
+                    run -= 16
+                category = get_category(size)
+                huffman_code = huffman_table[(run, category)]
+                additional_bits = get_additional_bits(size)
+                bit_stream += huffman_code + additional_bits
+                run_length = 0
+        return bit_stream
 
-    def bitstream_to_hex(bitstream):
-        # 確保位元流長度是8的倍數
-        padding = 8 - (len(bitstream) % 8) if len(bitstream) % 8 != 0 else 0
-        if padding > 0:
-            bitstream += bitstring.Bits('0b' + '0' * padding)
-        
-        # 轉換為十六進制
-        hex_string = bitstream.hex
-        
-        # 格式化為 \x 格式
-        return ''.join('\\x' + hex_string[i:i+2] for i in range(0, len(hex_string), 2))
+    def bitstream_to_hex(bit_stream):
+        hex_string = ''
+        for i in range(0, len(bit_stream), 8):
+            byte = bit_stream[i:i+8]
+            if len(byte) < 8:
+                byte = byte.ljust(8, '0')
+            hex_string += f'\\x{int(byte, 2):02x}'
+        return hex_string
 
     # 編碼 DC 資料
     encoded_Y_DC = encode_dc(Y_DC_data, dc_luminance)
