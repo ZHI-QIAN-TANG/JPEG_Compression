@@ -366,7 +366,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     (15, 9): '1111111111111101',
     (15, 10): '1111111111111110',
     }
-    
+
     def encode_dc(data, table):
         encoded = ""
         prev = 0
@@ -386,6 +386,8 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
         for block in data:
             zero_count = 0
             for run, value in block:
+                if run == 0 and value == 0:
+                    encoded += table[(0, 0)]
                 if run == 15 and value == 0:
                     encoded += table[(15, 0)]
                     zero_count = 0
