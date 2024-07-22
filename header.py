@@ -1,5 +1,5 @@
 import pickle
-import test
+import Huffman_coding_cf
 
 def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC):
     # JPEG標頭常量部分
@@ -84,7 +84,7 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes
     '''
     # 定義SOS段（Start Of Scan）
     SOS = b'\xFF\xDA'
-    sos_length = b'\x00\x0E'  # 段長度 or 0C
+    sos_length = b'\x00\x0C'  # 段長度 or 0E
     num_sos_components = b'\x03'  # 分量數
     sos_components = (
         b'\x01\x00'  # Y分量

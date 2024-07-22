@@ -95,7 +95,7 @@ import RLC
 import DPCM
 import AC_DC_tree_DHT
 import header as h
-import test as t
+import Huffman_coding_cf as t
 
 '''
 image_path = "test2.jpg" # 將圖像進行導入
