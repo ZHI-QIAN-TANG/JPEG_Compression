@@ -409,7 +409,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
         return encoded
 
     def bitstring_to_bytes(s):
-        return bytes(int(s[i:i+8], 2) for i in range(0, len(s), 8))
+        return bytes(int(s[i:i+8].ljust(8, '0'), 2) for i in range(0, len(s), 8))
 
     # 編碼 DC 數據
     encoded_Y_DC = encode_dc(Y_DC_data, dc_luminance)
