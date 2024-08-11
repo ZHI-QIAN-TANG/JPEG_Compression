@@ -3,6 +3,13 @@ import codecs
 import math
 
 def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
+    # print('Y_DC_data',Y_DC_data)
+    # print('U_DC_data',U_DC_data)
+    # print('V_DC_data',V_DC_data)
+    # print('Y_AC_data',Y_AC_data)
+    # print('U_AC_data',U_AC_data)
+    # print('V_AC_data',V_AC_data)
+
     # DC 亮度表
     dc_luminance = {
     0: '00',
@@ -373,12 +380,13 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
         for value in data:
             diff = value - prev
             prev = value
-            category = len(bin(abs(diff))[2:]) if diff != 0 else 0
+            category = min(11, len(bin(abs(diff))[2:]) if diff != 0 else 0)
             encoded += table[category]
-            if diff > 0:
-                encoded += bin(diff)[2:].zfill(category)
-            elif diff < 0:
-                encoded += bin(abs(diff) - 1)[2:].zfill(category).replace('0', 'x').replace('1', '0').replace('x', '1')
+            if category > 0:
+                if diff > 0:
+                    encoded += bin(diff)[2:].zfill(category)
+                else:
+                    encoded += bin((1 << category) + diff - 1)[2:].zfill(category)
         return encoded
 
     def encode_ac(data, table):
@@ -386,30 +394,36 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
         for block in data:
             zero_count = 0
             for run, value in block:
-                if run == 0 and value == 0:
+                if run == 0 and value == 0:  # EOB
                     encoded += table[(0, 0)]
-                if run == 15 and value == 0:
-                    encoded += table[(15, 0)]
-                    zero_count = 0
-                elif value == 0:
+                    break
+                while run > 15:
+                    encoded += table[(15, 0)]  # ZRL
+                    run -= 16
+                if value == 0:
                     zero_count += run
                 else:
-                    while zero_count > 15:
-                        encoded += table[(15, 0)]
-                        zero_count -= 16
-                    category = len(bin(abs(value))[2:])
-                    encoded += table[(zero_count, category)]
+                    category = min(10, len(bin(abs(value))[2:]))
+                    encoded += table[(run, category)]
                     if value > 0:
                         encoded += bin(value)[2:].zfill(category)
                     else:
-                        encoded += bin(abs(value) - 1)[2:].zfill(category).replace('0', 'x').replace('1', '0').replace('x', '1')
-                    zero_count = 0
-            if block[-1] != [0, 0]:
-                encoded += table[(0, 0)]
+                        encoded += bin((1 << category) + value - 1)[2:].zfill(category)
+            if len(block) == 0 or (block[-1][0] != 0 or block[-1][1] != 0):
+                encoded += table[(0, 0)]  # 確保每個塊以 EOB 結束
         return encoded
 
+
     def bitstring_to_bytes(s):
-        return bytes(int(s[i:i+8].ljust(8, '0'), 2) for i in range(0, len(s), 8))
+        return bytes(int(s[i:i+8], 2) for i in range(0, len(s), 8))
+    
+    def avoid_false_markers(data):
+        result = bytearray()
+        for byte in data:
+            result.append(byte)
+            if byte == 0xFF:
+                result.append(0x00)
+        return bytes(result)
 
     # 編碼 DC 數據
     encoded_Y_DC = encode_dc(Y_DC_data, dc_luminance)
@@ -429,6 +443,20 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     encoded_bytes_U_AC = bitstring_to_bytes(encoded_U_AC)
     encoded_bytes_V_AC = bitstring_to_bytes(encoded_V_AC)
 
+    # 轉換為字節並避免偽標記
+    encoded_bytes_Y_DC = avoid_false_markers(bitstring_to_bytes(encoded_Y_DC))
+    encoded_bytes_U_DC = avoid_false_markers(bitstring_to_bytes(encoded_U_DC))
+    encoded_bytes_V_DC = avoid_false_markers(bitstring_to_bytes(encoded_V_DC))
+    encoded_bytes_Y_AC = avoid_false_markers(bitstring_to_bytes(encoded_Y_AC))
+    encoded_bytes_U_AC = avoid_false_markers(bitstring_to_bytes(encoded_U_AC))
+    encoded_bytes_V_AC = avoid_false_markers(bitstring_to_bytes(encoded_V_AC))
+
+        # 合併所有編碼數據
+    all_encoded_data = encoded_Y_DC + encoded_Y_AC + encoded_U_DC + encoded_U_AC + encoded_V_DC + encoded_V_AC
+    
+    # 轉換為字節並避免偽標記
+    encoded_bytes = avoid_false_markers(bitstring_to_bytes(all_encoded_data))
+
 
     print("encoded_bytes_Y_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_Y_DC))
     print("encoded_bytes_U_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_U_DC))
@@ -442,5 +470,5 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     Y_DC_codebook_bytes = b'\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b'
     UV_DC_codebook_bytes = b'\xff\xc4\x00\x1f\x01\x00\x03\x01\x01\x01\x01\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b'
 
-    return Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC
+    return Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,encoded_bytes
 

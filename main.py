@@ -276,7 +276,7 @@ def write_jpeg_file(encoded_data, output_file):
 '''
 
 def main():
-    image_path = "test3.jpg"
+    image_path = "test5.jpg"
     output_jpeg = "output.jpg"
 
     Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC = generate_encoded_data(image_path)
@@ -284,7 +284,7 @@ def main():
     #print(h.save_jpeg_header(output_jpeg, 400, 600,,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs))
     #generate_encoded_data(image_path)
     
-    header = h.generate_jpeg_header(16, 16, Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC)
+    header = h.generate_jpeg_header(8, 8, Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC)
     with open(output_jpeg, 'wb') as f:
         print("start encode")
         f.write(header)

@@ -97,6 +97,7 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes
 
     # EOI標記（End of Image）
     EOI = b'\xFF\xD9'
+    print("EOI = ",EOI)
 
     # 組裝JPEG標頭
     header = (
