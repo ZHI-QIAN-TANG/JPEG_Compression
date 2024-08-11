@@ -419,10 +419,14 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     
     def avoid_false_markers(data):
         result = bytearray()
-        for byte in data:
-            result.append(byte)
-            if byte == 0xFF:
-                result.append(0x00)
+        i = 0
+        while i < len(data):
+            result.append(data[i])
+            if data[i] == 0xFF and i + 1 < len(data):
+                if data[i + 1] in [0x00, 0xFF]:
+                    result.append(0x00)
+                i += 1
+            i += 1
         return bytes(result)
 
     # 編碼 DC 數據
@@ -451,7 +455,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     encoded_bytes_U_AC = avoid_false_markers(bitstring_to_bytes(encoded_U_AC))
     encoded_bytes_V_AC = avoid_false_markers(bitstring_to_bytes(encoded_V_AC))
 
-        # 合併所有編碼數據
+    # 合併所有編碼數據
     all_encoded_data = encoded_Y_DC + encoded_Y_AC + encoded_U_DC + encoded_U_AC + encoded_V_DC + encoded_V_AC
     
     # 轉換為字節並避免偽標記
