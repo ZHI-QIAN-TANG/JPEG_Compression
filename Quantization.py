@@ -10,8 +10,8 @@ def YQuantization(Y):
                                   [18, 22, 37, 56, 68, 109, 103, 77],
                                   [24, 35, 55, 64, 81, 104, 113, 92],
                                   [49, 64, 78, 87, 103, 121, 120, 101],
-                                  [72, 92, 95, 98, 112, 100, 103, 99]])
-    return (Y/YQuantizationTable).astype(int)
+                                  [72, 92, 95, 98, 112, 100, 103, 99]], dtype=np.float32)
+    return np.round(Y / YQuantizationTable).astype(int)
 
 # CbCr值量化
 def CbCrQuantization(CbCr):
@@ -22,5 +22,5 @@ def CbCrQuantization(CbCr):
                                       [99, 99, 99, 99, 99, 99, 99, 99],
                                       [99, 99, 99, 99, 99, 99, 99, 99],
                                       [99, 99, 99, 99, 99, 99, 99, 99],
-                                      [99, 99, 99, 99, 99, 99, 99, 99]])
-    return (CbCr/CbCrQuantizationTable).astype(int)
+                                      [99, 99, 99, 99, 99, 99, 99, 99]], dtype=np.float32)
+    return np.round(CbCr / CbCrQuantizationTable).astype(int)
