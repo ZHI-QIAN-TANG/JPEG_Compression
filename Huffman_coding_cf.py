@@ -386,7 +386,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
                 if diff > 0:
                     encoded += bin(diff)[2:].zfill(category)
                 else:
-                    encoded += bin((1 << category) + diff - 1)[2:].zfill(category)
+                    encoded += bin((1 << category) + diff)[2:].zfill(category)
         return encoded
 
     def encode_ac(data, table):
@@ -397,25 +397,27 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
                 if run == 0 and value == 0:  # EOB
                     encoded += table[(0, 0)]
                     break
-                while run > 15:
+                while run >= 15:
                     encoded += table[(15, 0)]  # ZRL
                     run -= 16
                 if value == 0:
                     zero_count += run
                 else:
                     category = min(10, len(bin(abs(value))[2:]))
-                    encoded += table[(run, category)]
+                    encoded += table[(zero_count, category)]
                     if value > 0:
                         encoded += bin(value)[2:].zfill(category)
                     else:
-                        encoded += bin((1 << category) + value - 1)[2:].zfill(category)
+                        encoded += bin((1 << category) + value)[2:].zfill(category)
+                    zero_count = 0
             if len(block) == 0 or (block[-1][0] != 0 or block[-1][1] != 0):
-                encoded += table[(0, 0)]  # 確保每個塊以 EOB 結束
+                encoded += table[(0, 0)]  # Ensure each block ends with EOB
         return encoded
 
 
     def bitstring_to_bytes(s):
-        return bytes(int(s[i:i+8], 2) for i in range(0, len(s), 8))
+        padded_binary = s.zfill((len(s) + 7) // 8 * 8)
+        return bytes(int(padded_binary[i:i+8], 2) for i in range(0, len(padded_binary), 8))
     
     def avoid_false_markers(data):
         result = bytearray()
@@ -442,7 +444,6 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     encoded_bytes_Y_AC = bitstring_to_bytes(encoded_Y_AC)
     encoded_bytes_U_AC = bitstring_to_bytes(encoded_U_AC)
     encoded_bytes_V_AC = bitstring_to_bytes(encoded_V_AC)
-
     # 轉換為字節並避免偽標記
     # encoded_bytes_Y_DC = avoid_false_markers(bitstring_to_bytes(encoded_Y_DC))
     # encoded_bytes_U_DC = avoid_false_markers(bitstring_to_bytes(encoded_U_DC))
@@ -455,8 +456,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     all_encoded_data = encoded_Y_DC + encoded_Y_AC + encoded_U_DC + encoded_U_AC + encoded_V_DC + encoded_V_AC
     
     # 轉換為字節並避免偽標記
-    encoded_bytes = avoid_false_markers(bitstring_to_bytes(all_encoded_data))
-
+    encoded_bytes = bitstring_to_bytes(all_encoded_data)
 
     print("encoded_bytes_Y_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_Y_DC))
     print("encoded_bytes_U_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_U_DC))
@@ -464,7 +464,6 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     print("encoded_bytes_Y_AC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_Y_AC))
     print("encoded_bytes_U_AC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_U_AC))
     print("encoded_bytes_V_AC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_V_AC))
-
     Y_AC_codebook_bytes = b'\xff\xc4\x00\xb5\x10\x00\x02\x01\x03\x03\x02\x04\x03\x05\x05\x04\x04\x00\x00\x01}\x01\x02\x03\x00\x04\x11\x05\x12!1A\x06\x13Qa\x07"q\x142\x81\x91\xa1\x08#B\xb1\xc1\x15R\xd1\xf0$3br\x82\t\n\x16\x17\x18\x19\x1a%&\'()*456789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz\x83\x84\x85\x86\x87\x88\x89\x8a\x92\x93\x94\x95\x96\x97\x98\x99\x9a\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa'
     UV_AC_codebook_bytes = b'\xff\xc4\x00\xb5\x11\x00\x02\x01\x02\x04\x04\x03\x04\x07\x05\x04\x04\x00\x01\x02w\x00\x01\x02\x03\x11\x04\x05!1\x06\x12AQ\x07aq\x13"2\x81\x08\x14B\x91\xa1\xb1\xc1\t#3R\xf0\x15br\xd1\n\x16$4\xe1%\xf1\x17\x18\x19\x1a&\'()*56789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x92\x93\x94\x95\x96\x97\x98\x99\x9a\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa'
     Y_DC_codebook_bytes = b'\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b'
