@@ -1,4 +1,5 @@
 import numpy as np
+import DCT_pro as old_dct
 
 def dct_1d(x):#一維DCT公式
     N = len(x)
@@ -12,11 +13,11 @@ def dct_1d(x):#一維DCT公式
             sum_val *= np.sqrt(1 / N)
         else:
             sum_val *= np.sqrt(2 / N)
-        answer[k] = sum_val
+        answer[k] = int(sum_val)
     return answer
 
 
-def dct_2d(matrix):#主要呼叫的函式
+def DCT(matrix):#主要呼叫的函式:dct_2d
     M, N = matrix.shape
     dct_matrix = np.zeros((M, N))
     
@@ -30,8 +31,15 @@ def dct_2d(matrix):#主要呼叫的函式
     
     return dct_matrix
 
-
 '''
+#確認答案的部分
+from scipy.fftpack import dct, idct
+
+def TDCT(matrix):
+    return dct(dct(matrix.T, norm='ortho').T, norm='ortho')
+
+def IDCT(dct_matrix):
+    return idct(idct(dct_matrix.T, norm='ortho').T, norm='ortho')
 # 示例矩陣
 matrix = np.array([
     [52, 55, 61, 66, 70, 61, 64, 73],
@@ -44,6 +52,8 @@ matrix = np.array([
     [87, 79, 69, 68, 65, 76, 78, 94]
 ])
 # 計算二維DCT
-dct_result = dct_2d(matrix)
+dct_result = DCT(matrix)
 print(dct_result)
+print("-----------")
+print(TDCT(matrix))
 '''

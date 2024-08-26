@@ -3,12 +3,12 @@ import codecs
 import math
 
 def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
-    # print('Y_DC_data',Y_DC_data)
-    # print('U_DC_data',U_DC_data)
-    # print('V_DC_data',V_DC_data)
-    # print('Y_AC_data',Y_AC_data)
-    # print('U_AC_data',U_AC_data)
-    # print('V_AC_data',V_AC_data)
+    print('Y_DC_data',Y_DC_data)
+    print('U_DC_data',U_DC_data)
+    print('V_DC_data',V_DC_data)
+    print('Y_AC_data',Y_AC_data)
+    print('U_AC_data',U_AC_data)
+    print('V_AC_data',V_AC_data)
 
     # DC 亮度表
     dc_luminance = {
