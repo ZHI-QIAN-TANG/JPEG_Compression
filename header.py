@@ -1,5 +1,6 @@
 import pickle
 import Huffman_coding_cf
+import Zigzag as z
 
 def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,encoded_bytes):
     # JPEG標頭常量部分
@@ -8,9 +9,9 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes
     JFIF = b'JFIF\x00'  # JFIF標識符
     length = b'\x00\x10'  # APP0段長度
     version = b'\x01\x01'  # JFIF版本
-    units = b'\x01'  # 密度單位（0：無單位，1：每英寸，2：每厘米）
-    x_density = b'\x00\x78'  # X方向密度
-    y_density = b'\x00\x78'  # Y方向密度
+    units = b'\x00'  # 密度單位（0：無單位，1：每英寸，2：每厘米）
+    x_density = b'\x00\x48'  # X方向密度
+    y_density = b'\x00\x48'  # Y方向密度
     x_thumb = b'\x00'  # 縮略圖寬度
     y_thumb = b'\x00'  # 縮略圖高度
 
@@ -33,29 +34,29 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes
     DQT_Y = b'\xFF\xDB'  # Define Quantization Table
     dqt_length_Y = b'\x00\x43'  # 段長度
     dqt_info_Y = b'\x00'  # 表信息
-    q_table_Y = bytes([
-        16, 11, 10, 16, 24, 41, 51, 61,
-        12, 12, 14, 19, 26, 58, 60, 55,
-        14, 13, 16, 24, 40, 67, 69, 56,
-        14, 17, 22, 29, 51, 87, 80, 62,
-        18, 22, 37, 56, 68, 109, 103, 77,
-        24, 35, 55, 64, 81, 104, 113, 92,
-        49, 64, 78, 87, 103, 121, 120, 101,
-        72, 92, 95, 98, 112, 100, 103, 99])
+    table_Y = [ [16, 11, 10, 16, 24, 41, 51, 61],
+                [12, 12, 14, 19, 26, 58, 60, 55],
+                [14, 13, 16, 24, 40, 67, 69, 56],
+                [14, 17, 22, 29, 51, 87, 80, 62],
+                [18, 22, 37, 56, 68, 109, 103, 77],
+                [24, 35, 55, 64, 81, 104, 113, 92],
+                [49, 64, 78, 87, 103, 121, 120, 101],
+                [72, 92, 95, 98, 112, 100, 103, 99] ]
+    q_table_Y = bytes(z.Zigzag(table_Y))
 
     # Define Quantization Table for Cb, Cr
     DQT_C = b'\xFF\xDB'  # Define Quantization Table
     dqt_length_C = b'\x00\x43'  # 段長度
     dqt_info_C = b'\x01'  # 表信息
-    q_table_C = bytes([
-        17, 18, 24, 47, 99, 99, 99, 99,
-        18, 21, 26, 66, 99, 99, 99, 99,
-        24, 26, 56, 99, 99, 99, 99, 99,
-        47, 66, 99, 99, 99, 99, 99, 99,
-        99, 99, 99, 99, 99, 99, 99, 99,
-        99, 99, 99, 99, 99, 99, 99, 99,
-        99, 99, 99, 99, 99, 99, 99, 99,
-        99, 99, 99, 99, 99, 99, 99, 99])
+    table_C = [ [17, 18, 24, 47, 99, 99, 99, 99],
+                [18, 21, 26, 66, 99, 99, 99, 99],
+                [24, 26, 56, 99, 99, 99, 99, 99],
+                [47, 66, 99, 99, 99, 99, 99, 99],
+                [99, 99, 99, 99, 99, 99, 99, 99],
+                [99, 99, 99, 99, 99, 99, 99, 99],
+                [99, 99, 99, 99, 99, 99, 99, 99],
+                [99, 99, 99, 99, 99, 99, 99, 99]]
+    q_table_C = bytes(z.Zigzag(table_C))
  
     def generate_dht_segment(huffman_data, table_class, table_id):
         # Prepare DHT segment header
