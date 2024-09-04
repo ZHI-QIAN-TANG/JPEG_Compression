@@ -8,9 +8,9 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes
     JFIF = b'JFIF\x00'  # JFIF標識符
     length = b'\x00\x10'  # APP0段長度
     version = b'\x01\x01'  # JFIF版本
-    units = b'\x00'  # 密度單位（0：無單位，1：每英寸，2：每厘米）
-    x_density = b'\x00\x48'  # X方向密度
-    y_density = b'\x00\x48'  # Y方向密度
+    units = b'\x01'  # 密度單位（0：無單位，1：每英寸，2：每厘米）
+    x_density = b'\x00\x78'  # X方向密度
+    y_density = b'\x00\x78'  # Y方向密度
     x_thumb = b'\x00'  # 縮略圖寬度
     y_thumb = b'\x00'  # 縮略圖高度
 
