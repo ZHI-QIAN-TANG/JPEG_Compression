@@ -457,6 +457,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     
     # 轉換為字節並避免偽標記
     encoded_bytes = bitstring_to_bytes(all_encoded_data)
+    print(all_encoded_data)
 
     print("encoded_bytes_Y_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_Y_DC))
     print("encoded_bytes_U_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_U_DC))
