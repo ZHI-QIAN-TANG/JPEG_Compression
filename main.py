@@ -206,6 +206,9 @@ def generate_encoded_data(image_path):
         YAC = Z.Zigzag(QY.tolist())
         UAC = Z.Zigzag(QU.tolist())
         VAC = Z.Zigzag(QV.tolist())
+        YAC = YAC[1:]
+        UAC = UAC[1:]
+        VAC = VAC[1:]
         
         YRL = RLC.RLC(YAC)
         URL = RLC.RLC(UAC)
@@ -277,7 +280,7 @@ def write_jpeg_file(encoded_data, output_file):
 
 def main():
     image_path = "test5.jpg"
-    output_jpeg = "output.jpg"
+    output_jpeg = "output1.jpg"
 
     Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,encoded_bytes = generate_encoded_data(image_path)
     
