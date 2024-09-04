@@ -87,6 +87,7 @@ if __name__ == "__main__":
 
 import numpy as np #用於數值處理
 import Convert_RGB_to_YUV
+import RGBToYCbCrTest
 import crop
 import DCT_pro as DCT
 import Quantization as Q
@@ -189,36 +190,40 @@ def generate_encoded_data(image_path):
     VDCs = []
     for i in range(len(blocks)):
         img = blocks[i]
+        """
         YuvMatrix = np.array([[0.299, 0.587, 0.114],[-0.147, -0.289, 0.436],[0.615, -0.515, -0.100]])
         zero_channel = Convert_RGB_to_YUV.Creative_Zeros(img)
         RData, GData, BData = Convert_RGB_to_YUV.Cut_RGB(img, zero_channel)
         YUV = Convert_RGB_to_YUV.Convert_YUV(img, YuvMatrix)
-        YSpllit, USplist, VSplite, Y, U, V = Convert_RGB_to_YUV.Cut_YUV(YUV)
-        
+        YSpllit, USplist, VSplite, Y, Cb, Cr = Convert_RGB_to_YUV.Cut_YUV(YUV)
+        """
+
+        Y, Cb, Cr = RGBToYCbCrTest.ConvertRGBToYCbCr(img)
+
         DCTY = DCT.DCT(Y)
-        DCTU = DCT.DCT(U)
-        DCTV = DCT.DCT(V)
+        DCTCb = DCT.DCT(Cb)
+        DCTCr = DCT.DCT(Cr)
 
         QY = Q.YQuantization(DCTY)
-        QU = Q.CbCrQuantization(DCTU)
-        QV = Q.CbCrQuantization(DCTV)
-        
-        YAC = Z.Zigzag(QY.tolist())
-        UAC = Z.Zigzag(QU.tolist())
-        VAC = Z.Zigzag(QV.tolist())
-        YAC = YAC[1:]
-        UAC = UAC[1:]
-        VAC = VAC[1:]
-        
-        YRL = RLC.RLC(YAC)
-        URL = RLC.RLC(UAC)
-        VRL = RLC.RLC(VAC)
+        QCb = Q.CbCrQuantization(DCTCb)
+        QCr = Q.CbCrQuantization(DCTCr)
 
-        UDCs.append(QU[0][0])
-        URLs.append(URL)
+        YAC = Z.Zigzag(QY.tolist())
+        CbAC = Z.Zigzag(QCb.tolist())
+        CrAC = Z.Zigzag(QCr.tolist())
+        YAC = YAC[1:]
+        CbAC = CbAC[1:]
+        CrAC = CrAC[1:]
+
+        YRL = RLC.RLC(YAC)
+        URL = RLC.RLC(CbAC)
+        VRL = RLC.RLC(CrAC)
+
         YDCs.append(QY[0][0])
         YRLs.append(YRL)
-        VDCs.append(QV[0][0])
+        UDCs.append(QCb[0][0])
+        URLs.append(URL)
+        VDCs.append(QCr[0][0])
         VRLs.append(VRL)
 
     

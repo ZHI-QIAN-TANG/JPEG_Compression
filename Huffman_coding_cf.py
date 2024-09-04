@@ -431,11 +431,20 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     encoded_Y_DC = encode_dc(Y_DC_data, dc_luminance)
     encoded_U_DC = encode_dc(U_DC_data, dc_chrominance)
     encoded_V_DC = encode_dc(V_DC_data, dc_chrominance)
+    # print(encoded_Y_DC) # 有錯
+    # print(encoded_U_DC)
+    # print(encoded_V_DC)
+    # encoded_Y_DC = "111110100110"
 
     # 編碼 AC 數據
     encoded_Y_AC = encode_ac(Y_AC_data, ac_luminance)
     encoded_U_AC = encode_ac(U_AC_data, ac_chrominance)
     encoded_V_AC = encode_ac(V_AC_data, ac_chrominance)
+    # print(encoded_Y_AC)
+    # print(encoded_U_AC) # 有錯
+    # print(encoded_V_AC) # 有錯
+    # encoded_U_AC = "1111111100111111111001111111110011010"
+    # encoded_V_AC = "1111111100111111111001111111110011010"
 
     # 轉換為字節並打印
     encoded_bytes_Y_DC = bitstring_to_bytes(encoded_Y_DC)
@@ -457,7 +466,6 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     
     # 轉換為字節並避免偽標記
     encoded_bytes = bitstring_to_bytes(all_encoded_data)
-    print(all_encoded_data)
 
     print("encoded_bytes_Y_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_Y_DC))
     print("encoded_bytes_U_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_U_DC))
