@@ -9,7 +9,12 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     print('Y_AC_data',Y_AC_data)
     print('U_AC_data',U_AC_data)
     print('V_AC_data',V_AC_data)
-
+    Y_DC_data = [38]
+    U_DC_data = [40]
+    V_DC_data = [120]
+    Y_AC_data = [[[0, 0]]]
+    U_AC_data = [[[0, 0]]]
+    V_AC_data = [[[0, 0]]]
     # DC 亮度表
     dc_luminance = {
     0: '00',
@@ -388,7 +393,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
                 else:
                     encoded += bin((1 << category) + diff)[2:].zfill(category)
         return encoded
-
+    
     def encode_ac(data, table):
         encoded = ""
         for block in data:
