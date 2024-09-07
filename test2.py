@@ -1,10 +1,2 @@
-from PIL import Image
-
-# 讀取影像
-image = Image.open('test5.jpg')
-
-# 設定壓縮品質，範圍為 0（最差品質，最大壓縮）到 100（最佳品質，最小壓縮）
-quality = 50
-
-# 儲存影像並進行 JPEG 壓縮
-image.save('compressed.jpg', 'JPEG', quality=quality)
+a = '11111000101111101000101000101000101011111110010100110011111111011111110000111111'
+print(len(a))
