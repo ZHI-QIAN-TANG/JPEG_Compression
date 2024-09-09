@@ -12,9 +12,9 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     Y_DC_data = [38]
     U_DC_data = [40]
     V_DC_data = [120]
-    Y_AC_data = [[[0, 0]]]
-    U_AC_data = [[[0, 0]]]
-    V_AC_data = [[[0, 0]]]
+    Y_AC_data = [[[0,0]]]
+    U_AC_data = [[[0,0]]]
+    V_AC_data = [[[0,0]]]
     # DC 亮度表
     dc_luminance = {
     0: '00',
@@ -468,7 +468,6 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
 
     # 合併所有編碼數據
     all_encoded_data = encoded_Y_DC + encoded_Y_AC + encoded_U_DC + encoded_U_AC + encoded_V_DC + encoded_V_AC
-    
     # 轉換為字節並避免偽標記
     encoded_bytes = bitstring_to_bytes(all_encoded_data)
 

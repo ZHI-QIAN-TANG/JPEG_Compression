@@ -1,5 +1,5 @@
 
-with open('test6.jpg', 'rb') as file:
+with open('test7.jpg', 'rb') as file:
     image_data = file.read()
     print(image_data)
 

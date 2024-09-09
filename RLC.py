@@ -1,6 +1,7 @@
 # 變動長度編碼(Run-Length Coding：RLC)，跳過DC值後，紀錄數列有幾個0以及下個不是0的數值
 # 回傳值為二維陣列
 def RLC(ACs):
+    print(ACs)
     RL = []
     count = 0
     
