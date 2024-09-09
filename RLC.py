@@ -8,12 +8,9 @@ def RLC(ACs):
     for i in range(len(ACs)):
         if ACs[i] == 0:
             count += 1
-            if count == 16:
-                RL.append([15, 0])  # 16個0視為一個ZRL
-                count = 0
         else:
             while count > 15:  # 如果有超過15個0
-                RL.append([15, 0])  # 填加一個ZRL
+                RL.append([15, 0])  # 16個0視為一個ZRL
                 count -= 16
             RL.append([count, ACs[i]])
             count = 0
