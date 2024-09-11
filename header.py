@@ -25,9 +25,9 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes
 
     # 每個分量的信息（Y, Cb, Cr）
     components = (
-        b'\x01\x22\x00'  # Y分量（ID：1，取樣係數：1x1，量化表ID：0）
-        b'\x02\x11\x01'  # Cb分量（ID：2，取樣係數：2x2，量化表ID：1）
-        b'\x03\x11\x01'  # Cr分量（ID：3，取樣係數：2x2，量化表ID：1）
+        b'\x01\x22\x00'  # Y分量（ID：1，取樣係數：2x2，量化表ID：0）   4:2:0
+        b'\x02\x11\x01'  # Cb分量（ID：2，取樣係數：1x1，量化表ID：1）
+        b'\x03\x11\x01'  # Cr分量（ID：3，取樣係數：1x1，量化表ID：1）
     )
 
     # 定義DQT段（Define Quantization Table）
@@ -117,7 +117,7 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes
         y_dc_table + y_ac_table + uv_dc_table + uv_ac_table +
         SOS + sos_length + num_sos_components + sos_components + start_spectral + end_spectral + approx_high +
         encoded_bytes +
-        # b'\xf8\xbe\x8a(\xaf\xe53\xfd\xfc?'+
+        #b'\xf8\xbe\x8a(\xaf\xe53\xfd\xfc?'+
         # encoded_bytes_Y_DC + encoded_bytes_Y_AC + encoded_bytes_U_DC + encoded_bytes_U_AC + encoded_bytes_V_DC + encoded_bytes_V_AC + 
         EOI
     )
