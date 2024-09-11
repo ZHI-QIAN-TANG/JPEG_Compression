@@ -200,6 +200,11 @@ def generate_encoded_data(image_path):
 
         Y, Cb, Cr = RGBToYCbCrTest.ConvertRGBToYCbCr(img)
 
+        print(Y)
+        print(Cb)
+        print(Cr)
+        # Cb = Cb[::2, ::2]
+        # Cr = Cr[::2, ::2]
         DCTY = DCT.DCT(Y)
         DCTCb = DCT.DCT(Cb)
         DCTCr = DCT.DCT(Cr)
@@ -284,8 +289,8 @@ def write_jpeg_file(encoded_data, output_file):
 '''
 
 def main():
-    image_path = "test5.jpg"
-    output_jpeg = "output1.jpg"
+    image_path = "test6.jpg"
+    output_jpeg = "output2.jpg"
 
     Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,encoded_bytes = generate_encoded_data(image_path)
     
