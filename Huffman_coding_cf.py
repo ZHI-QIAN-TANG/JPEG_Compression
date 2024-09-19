@@ -9,6 +9,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     print('Y_AC_data',Y_AC_data)
     print('U_AC_data',U_AC_data)
     print('V_AC_data',V_AC_data)
+
     # DC 亮度表
     dc_luminance = {
     0: '00',
@@ -387,7 +388,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
                 else:
                     encoded += bin((1 << category) + diff)[2:].zfill(category)
         return encoded
-    
+
     def encode_ac(data, table):
         encoded = ""
         for block in data:
@@ -413,11 +414,37 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
                 encoded += table[(0, 0)]  # Ensure each block ends with EOB
         return encoded
 
+    def bitstream_to_bytes(bitstream):
+        """
+        將位元流轉換為位元組，並在不足8位時補1。
+        當位元組為0xFF時，自動插入0x00進行字節填充。
+        
+        參數:
+        - bitstream: 字串，由'0'和'1'組成的位元流。
+        
+        返回:
+        - bytes_data: 位元組數據，以 bytearray 形式返回。
+        """
+        # 用來存儲位元組數據的 bytearray
+        bytes_data = bytearray()
 
-    def bitstring_to_bytes(s):
-        padded_binary = s.zfill((len(s) + 7) // 8 * 8)
-        return bytes(int(padded_binary[i:i+8], 2) for i in range(0, len(padded_binary), 8))
-    
+        # 計算需要補多少個1以符合8位長度
+        padding_length = (8 - len(bitstream) % 8) % 8
+        bitstream_padded = bitstream + '1' * padding_length
+
+        # 每8位轉換為一個位元組，並將其加入 bytearray 中
+        for i in range(0, len(bitstream_padded), 8):
+            byte_str = bitstream_padded[i:i+8]
+            byte_value = int(byte_str, 2)  # 將8位的二進位字串轉換為整數
+            bytes_data.append(byte_value)
+            
+            # 若產生的位元組為0xFF，則插入0x00以避免與JPEG標記衝突
+            if byte_value == 0xFF:
+                bytes_data.append(0x00)
+
+        return bytes_data
+
+
     def avoid_false_markers(data):
         result = bytearray()
         for byte in data:
@@ -431,27 +458,21 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     encoded_U_DC = encode_dc(U_DC_data, dc_chrominance)
     encoded_V_DC = encode_dc(V_DC_data, dc_chrominance)
     # print(encoded_Y_DC) 
-    # print(encoded_U_DC)
-    # print(encoded_V_DC)
-    # encoded_Y_DC = "111110100110"
-
+    # print(encoded_U_DC) # 有錯
+    # print(encoded_V_DC) # 有錯
+    # encoded_U_DC = "1110101000"
+    # encoded_V_DC = "111101111000"
+    
     # 編碼 AC 數據
     encoded_Y_AC = encode_ac(Y_AC_data, ac_luminance)
     encoded_U_AC = encode_ac(U_AC_data, ac_chrominance)
     encoded_V_AC = encode_ac(V_AC_data, ac_chrominance)
     # print(encoded_Y_AC)
-    # print(encoded_U_AC) 
-    # print(encoded_V_AC) 
+    # print(encoded_U_AC)
+    # print(encoded_V_AC)
     # encoded_U_AC = "1111111100111111111001111111110011010"
     # encoded_V_AC = "1111111100111111111001111111110011010"
 
-    # 轉換為字節並打印
-    encoded_bytes_Y_DC = bitstring_to_bytes(encoded_Y_DC)
-    encoded_bytes_U_DC = bitstring_to_bytes(encoded_U_DC)
-    encoded_bytes_V_DC = bitstring_to_bytes(encoded_V_DC)
-    encoded_bytes_Y_AC = bitstring_to_bytes(encoded_Y_AC)
-    encoded_bytes_U_AC = bitstring_to_bytes(encoded_U_AC)
-    encoded_bytes_V_AC = bitstring_to_bytes(encoded_V_AC)
     # 轉換為字節並避免偽標記
     # encoded_bytes_Y_DC = avoid_false_markers(bitstring_to_bytes(encoded_Y_DC))
     # encoded_bytes_U_DC = avoid_false_markers(bitstring_to_bytes(encoded_U_DC))
@@ -462,18 +483,21 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
 
     # 合併所有編碼數據
     all_encoded_data = encoded_Y_DC + encoded_Y_AC + encoded_U_DC + encoded_U_AC + encoded_V_DC + encoded_V_AC
-    all_encoded_data = b'11101001101010111110101000001111110111100000'
-    encoded_bytes = bitstring_to_bytes(all_encoded_data)
-    print("encoded_bytes_Y_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_Y_DC))
-    print("encoded_bytes_U_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_U_DC))
-    print("encoded_bytes_V_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_V_DC))
-    print("encoded_bytes_Y_AC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_Y_AC))
-    print("encoded_bytes_U_AC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_U_AC))
-    print("encoded_bytes_V_AC:", ''.join('\\x{:02x}'.format(b) for b in encoded_bytes_V_AC))
+    
+    print(len(all_encoded_data))
+    # 轉換為字節並避免偽標記
+    encoded_bytes = bitstream_to_bytes(all_encoded_data)
+    
+    # print("encoded_bytes_Y_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_Y_DC))
+    # print("encoded_bytes_U_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_Y_AC))
+    # print("encoded_bytes_V_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_U_DC))
+    # print("encoded_bytes_Y_AC:", ''.join('\\x{:02x}'.format(b) for b in encoded_U_AC))
+    # print("encoded_bytes_U_AC:", ''.join('\\x{:02x}'.format(b) for b in encoded_V_DC))
+    # print("encoded_bytes_V_AC:", ''.join('\\x{:02x}'.format(b) for b in encoded_V_AC))
     Y_AC_codebook_bytes = b'\xff\xc4\x00\xb5\x10\x00\x02\x01\x03\x03\x02\x04\x03\x05\x05\x04\x04\x00\x00\x01}\x01\x02\x03\x00\x04\x11\x05\x12!1A\x06\x13Qa\x07"q\x142\x81\x91\xa1\x08#B\xb1\xc1\x15R\xd1\xf0$3br\x82\t\n\x16\x17\x18\x19\x1a%&\'()*456789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz\x83\x84\x85\x86\x87\x88\x89\x8a\x92\x93\x94\x95\x96\x97\x98\x99\x9a\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa'
     UV_AC_codebook_bytes = b'\xff\xc4\x00\xb5\x11\x00\x02\x01\x02\x04\x04\x03\x04\x07\x05\x04\x04\x00\x01\x02w\x00\x01\x02\x03\x11\x04\x05!1\x06\x12AQ\x07aq\x13"2\x81\x08\x14B\x91\xa1\xb1\xc1\t#3R\xf0\x15br\xd1\n\x16$4\xe1%\xf1\x17\x18\x19\x1a&\'()*56789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x92\x93\x94\x95\x96\x97\x98\x99\x9a\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa'
     Y_DC_codebook_bytes = b'\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b'
     UV_DC_codebook_bytes = b'\xff\xc4\x00\x1f\x01\x00\x03\x01\x01\x01\x01\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b'
 
-    return Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,encoded_bytes
-
+    # return Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,encoded_bytes
+    return encoded_bytes
