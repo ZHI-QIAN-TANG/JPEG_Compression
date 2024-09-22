@@ -9,7 +9,7 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes
     JFIF = b'JFIF\x00'  # JFIF標識符
     length = b'\x00\x10'  # APP0段長度
     version = b'\x01\x01'  # JFIF版本
-    units = b'\x01'  # 密度單位（0：無單位，1：每英寸，2：每厘米）
+    units = b'\x00'  # 密度單位（0：無單位，1：每英寸，2：每厘米）
     x_density = b'\x00\x78'  # X方向密度
     y_density = b'\x00\x78'  # Y方向密度
     x_thumb = b'\x00'  # 縮略圖寬度
@@ -25,8 +25,12 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes
 
     # 每個分量的信息（Y, Cb, Cr）
     components = (
+<<<<<<< HEAD
         b'\x01\x11\x00'  # Y分量（ID：1，取樣係數：1x1，量化表ID：0）
         # b'\x01\x22\x00'  # Y分量（ID：1，取樣係數：2x2，量化表ID：0）   4:2:0
+=======
+        b'\x01\x22\x00'  # Y分量（ID：1，取樣係數：2x2，量化表ID：0）   4:2:0
+>>>>>>> 5f9a9bf3295aee370144336b83b201e785a5b5c3
         b'\x02\x11\x01'  # Cb分量（ID：2，取樣係數：1x1，量化表ID：1）
         b'\x03\x11\x01'  # Cr分量（ID：3，取樣係數：1x1，量化表ID：1）
     )
@@ -117,8 +121,8 @@ def generate_jpeg_header(width, height, Y_AC_codebook_bytes,UV_AC_codebook_bytes
         SOF0 + sof_length + precision + height_bytes + width_bytes + num_components + components +
         y_dc_table + y_ac_table + uv_dc_table + uv_ac_table +
         SOS + sos_length + num_sos_components + sos_components + start_spectral + end_spectral + approx_high +
-        encoded_bytes +
-        #b'\xf8\xbe\x8a(\xaf\xe53\xfd\xfc?'+
+        #encoded_bytes +
+        b'\xf8\xbe\x8a(\xaf\xe53\xfd\xfc?'+
         # encoded_bytes_Y_DC + encoded_bytes_Y_AC + encoded_bytes_U_DC + encoded_bytes_U_AC + encoded_bytes_V_DC + encoded_bytes_V_AC + 
         EOI
     )

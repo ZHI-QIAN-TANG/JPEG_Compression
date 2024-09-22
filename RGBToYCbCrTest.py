@@ -14,16 +14,20 @@ def ConvertRGBToYCbCr(img):
     for x in range(width):
         for y in range(height):
             r, g, b = image[y, x]
-            
+            print(r,g,b)
             # 计算 YCbCr 通道的值
             Y = 0.299 * r + 0.587 * g + 0.114 * b
             Cb = -0.168736 * r - 0.331264 * g + 0.5 * b + 128
+           
             Cr = 0.5 * r - 0.418688 * g - 0.081312 * b + 128
             
             # 确保在 0-255 范围内
             Y_channel[y][x] = max(0, min(255, int(round(Y))))
+            Y_channel[y][x] = Y_channel[y][x] - 128
             Cb_channel[y][x] = max(0, min(255, int(round(Cb))))
+            Cb_channel[y][x] = Cb_channel[y][x] - 128
             Cr_channel[y][x] = max(0, min(255, int(round(Cr))))
+            Cr_channel[y][x] = Cr_channel[y][x] - 128
 
     # 打印或保存 Y, U, V 通道值
     # 这里可以将 Y_channel, U_channel, V_channel 保存为文本文件或者以其他格式保存
