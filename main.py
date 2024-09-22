@@ -240,7 +240,7 @@ def generate_encoded_data(image_path):
     # #print("dc_jpeg_header" , dc_jpeg_header)
     # #print("dc_merged_encoded_data" , dc_merged_encoded_data)
     # ac_jpeg_header, ac_merged_encoded_data = Huffman_coding_ac.Huffman_code(YRLs,URLs,VRLs)
-    Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,encoded_bytes = t.Huffman_coding(YDCs,UDCs,VDCs,YRLs,URLs,VRLs)
+    encoded_bytes = t.Huffman_coding(YDCs,UDCs,VDCs,YRLs,URLs,VRLs)
     '''
     print("1:",Y_AC_codebook_bytes,"\n")
     print("2:",U_AC_codebook_bytes,"\n")
@@ -257,7 +257,7 @@ def generate_encoded_data(image_path):
     print("5:",U_DC_encoded_data_bytes,"\n")
     print("6:",V_DC_encoded_data_bytes,"\n")
     '''
-    return  Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,encoded_bytes
+    return encoded_bytes
     #print("ac_merged_encoded_data" , ac_merged_encoded_data)
 
     # print("ac_huffman_tree = " ,ac_huffman_tree)
@@ -290,14 +290,14 @@ def write_jpeg_file(encoded_data, output_file):
 
 def main():
     image_path = "Sredjpg.jpg"
-    output_jpeg = "output.jpg"
+    output_jpeg = "output1.jpg"
 
-    Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,encoded_bytes = generate_encoded_data(image_path)
+    encoded_bytes = generate_encoded_data(image_path)
     
     #print(h.save_jpeg_header(output_jpeg, 400, 600,,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs))
     #generate_encoded_data(image_path)
     
-    header = h.generate_jpeg_header(8, 8, Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,encoded_bytes)
+    header = h.generate_jpeg_header(8, 8, encoded_bytes)
     with open(output_jpeg, 'wb') as f:
         print("start encode")
         f.write(header)
