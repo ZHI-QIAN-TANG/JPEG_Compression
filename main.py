@@ -290,7 +290,7 @@ def write_jpeg_file(encoded_data, output_file):
 
 def main():
     image_path = "Sredjpg_White.jpg"
-    output_jpeg = "output1.jpg"
+    output_jpeg = "output.jpg"
 
     encoded_bytes = generate_encoded_data(image_path)
     
