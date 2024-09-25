@@ -94,7 +94,7 @@ import Quantization as Q
 import Zigzag as Z
 import RLC
 import DPCM
-import AC_DC_tree_DHT
+import old_data.AC_DC_tree_DHT as AC_DC_tree_DHT
 import header as h
 import Huffman_coding_cf as t
 
@@ -200,9 +200,9 @@ def generate_encoded_data(image_path):
 
         Y, Cb, Cr = RGBToYCbCrTest.ConvertRGBToYCbCr(img)
 
-        print(Y)
-        print(Cb)
-        print(Cr)
+        # print(Y)
+        # print(Cb)
+        # print(Cr)
         # Cb = Cb[::2, ::2]
         # Cr = Cr[::2, ::2]
         DCTY = DCT.DCT(Y)
@@ -289,7 +289,7 @@ def write_jpeg_file(encoded_data, output_file):
 '''
 
 def main():
-    image_path = "Sredjpg_White.jpg"
+    image_path = "test2.jpg"
     output_jpeg = "output.jpg"
 
     encoded_bytes = generate_encoded_data(image_path)
@@ -297,7 +297,7 @@ def main():
     #print(h.save_jpeg_header(output_jpeg, 400, 600,,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs))
     #generate_encoded_data(image_path)
     
-    header = h.generate_jpeg_header(8, 8, encoded_bytes)
+    header = h.generate_jpeg_header(600, 400, encoded_bytes)
     with open(output_jpeg, 'wb') as f:
         print("start encode")
         f.write(header)

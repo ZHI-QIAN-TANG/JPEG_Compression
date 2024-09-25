@@ -3,12 +3,12 @@ import codecs
 import math
 
 def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
-    print('Y_DC_data',Y_DC_data)
-    print('U_DC_data',U_DC_data)
-    print('V_DC_data',V_DC_data)
-    print('Y_AC_data',Y_AC_data)
-    print('U_AC_data',U_AC_data)
-    print('V_AC_data',V_AC_data)
+    # print('Y_DC_data',Y_DC_data)
+    # print('U_DC_data',U_DC_data)
+    # print('V_DC_data',V_DC_data)
+    # print('Y_AC_data',Y_AC_data)
+    # print('U_AC_data',U_AC_data)
+    # print('V_AC_data',V_AC_data)
 
     # DC 亮度表
     dc_luminance = {
@@ -392,26 +392,20 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     def encode_ac(data, table):
         encoded = ""
         for block in data:
-            zero_count = 0
             for run, value in block:
-                if run == 0 and value == 0:  # EOB
-                    encoded += table[(0, 0)]
-                    break
-                while run >= 15:
-                    encoded += table[(15, 0)]  # ZRL
-                    run -= 16
                 if value == 0:
-                    zero_count += run
+                    if run == 0:#EOB
+                        encoded += table[(0,0)]
+                        break
+                    elif run == 15:#ZRL
+                        encoded += table[(15,0)]
                 else:
                     category = min(10, len(bin(abs(value))[2:]))
-                    encoded += table[(zero_count, category)]
+                    encoded += table[(run, category)]  # 使用每次遇到的 run 直接編碼
                     if value > 0:
                         encoded += bin(value)[2:].zfill(category)
                     else:
                         encoded += bin((1 << category) + value)[2:].zfill(category)
-                    zero_count = 0
-            if len(block) == 0 or (block[-1][0] != 0 or block[-1][1] != 0):
-                encoded += table[(0, 0)]  # Ensure each block ends with EOB
         return encoded
 
     def bitstream_to_bytes(bitstream):
@@ -484,10 +478,9 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
     # 合併所有編碼數據
     all_encoded_data = encoded_Y_DC + encoded_Y_AC + encoded_U_DC + encoded_U_AC + encoded_V_DC + encoded_V_AC
     
-    print(len(all_encoded_data))
     # 轉換為字節並避免偽標記
     encoded_bytes = bitstream_to_bytes(all_encoded_data)
-    
+    # print(all_encoded_data)
     # print("encoded_bytes_Y_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_Y_DC))
     # print("encoded_bytes_U_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_Y_AC))
     # print("encoded_bytes_V_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_U_DC))
