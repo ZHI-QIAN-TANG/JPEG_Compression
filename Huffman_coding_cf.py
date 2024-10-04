@@ -3,12 +3,12 @@ import codecs
 import math
 
 def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
-    # print('Y_DC_data',Y_DC_data)
-    # print('U_DC_data',U_DC_data)
-    # print('V_DC_data',V_DC_data)
-    # print('Y_AC_data',Y_AC_data)
-    # print('U_AC_data',U_AC_data)
-    # print('V_AC_data',V_AC_data)
+    print('Y_DC_data',Y_DC_data)
+    print('U_DC_data',U_DC_data)
+    print('V_DC_data',V_DC_data)
+    print('Y_AC_data',Y_AC_data)
+    print('U_AC_data',U_AC_data)
+    print('V_AC_data',V_AC_data)
 
     # DC 亮度表
     dc_luminance = {
@@ -384,29 +384,62 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
             encoded += table[category]
             if category > 0:
                 if diff > 0:
+                    # 正數，直接二進制編碼
                     encoded += bin(diff)[2:].zfill(category)
                 else:
-                    encoded += bin((1 << category) + diff)[2:].zfill(category)
+                    # 負數，將二進制位元反轉
+                    binary_rep = bin(abs(diff))[2:].zfill(category)  # 取得絕對值的二進制表示
+                    inverted_binary = ''.join('1' if b == '0' else '0' for b in binary_rep)  # 位元反轉
+                    encoded += inverted_binary
         return encoded
 
+    # def encode_ac(data, table):
+    #     encoded = ""
+    #     for block in data:
+    #         zero_count = 0
+    #         for run, value in block:
+    #             if run == 0 and value == 0:  # EOB
+    #                 encoded += table[(0, 0)]
+    #                 break
+    #             while run >= 15:
+    #                 encoded += table[(15, 0)]  # ZRL
+    #                 run -= 16
+    #             if value == 0:
+    #                 zero_count += run
+    #             else:
+    #                 category = min(10, len(bin(abs(value))[2:]))
+    #                 encoded += table[(zero_count, category)]
+    #                 if value > 0:
+    #                     encoded += bin(value)[2:].zfill(category)
+    #                 else:
+    #                     encoded += bin((1 << category) + value)[2:].zfill(category)
+    #                 zero_count = 0
+    #         if len(block) == 0 or (block[-1][0] != 0 or block[-1][1] != 0):
+    #             encoded += table[(0, 0)]  # Ensure each block ends with EOB
+    #     return encoded
+    
     def encode_ac(data, table):
         encoded = ""
         for block in data:
             for run, value in block:
+                print(block)
                 if value == 0:
-                    if run == 0:#EOB
-                        encoded += table[(0,0)]
+                    if run == 0: # EOB 
+                        encoded += table[(0, 0)]
                         break
-                    elif run == 15:#ZRL
-                        encoded += table[(15,0)]
-                else:
+                    else : # ZRL
+                        encoded += table[(15, 0)] 
+                else :
                     category = min(10, len(bin(abs(value))[2:]))
-                    encoded += table[(run, category)]  # 使用每次遇到的 run 直接編碼
+                    encoded += table[(run, category)]
                     if value > 0:
                         encoded += bin(value)[2:].zfill(category)
                     else:
-                        encoded += bin((1 << category) + value)[2:].zfill(category)
-        return encoded
+                        binary_rep = bin(abs(value))[2:].zfill(category)  # 取得絕對值的二進制表示
+                        inverted_binary = ''.join('1' if b == '0' else '0' for b in binary_rep)  # 位元反轉
+                        encoded += inverted_binary
+                print(encoded)
+        return encoded 
 
     def bitstream_to_bytes(bitstream):
         """
@@ -477,10 +510,17 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
 
     # 合併所有編碼數據
     all_encoded_data = encoded_Y_DC + encoded_Y_AC + encoded_U_DC + encoded_U_AC + encoded_V_DC + encoded_V_AC
-    
+    # print(encoded_Y_DC)
+    # print(encoded_Y_AC)
+    # print(encoded_U_DC)
+    # print(encoded_U_AC)
+    # print(encoded_V_DC)
+    # print(encoded_V_AC)
+    # print(len(all_encoded_data))
     # 轉換為字節並避免偽標記
     encoded_bytes = bitstream_to_bytes(all_encoded_data)
     # print(all_encoded_data)
+    
     # print("encoded_bytes_Y_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_Y_DC))
     # print("encoded_bytes_U_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_Y_AC))
     # print("encoded_bytes_V_DC:", ''.join('\\x{:02x}'.format(b) for b in encoded_U_DC))

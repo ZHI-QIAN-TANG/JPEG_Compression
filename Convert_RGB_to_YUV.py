@@ -17,16 +17,15 @@ def Cut_RGB(img,zero_channel):
     return RData,GData,BData
 
 def Convert_YUV(img,YuvMatrix):
-    # 將 RGB 影像轉換為 YUV
-    yuv = np.dot(img, YuvMatrix.T)
-    
-    # 調整 Y 通道的範圍（通常是 16-235）
-    yuv[:, :, 0] = yuv[:, :, 0] * 219 / 255 + 16
-    
-    # 調整 U 和 V 通道的範圍（通常是 16-240）
-    yuv[:, :, 1:] = yuv[:, :, 1:] * 224 / 255 + 128
-    
-    return yuv
+    YUV = np.dot(img,YuvMatrix.T) #將資料藉由內積的方式來進行彩度轉換(.T是用於將矩陣翻轉以利計算)
+    YUV[:, :, 1:] += 128.0 #將UV的部份加上128來維持範圍
+    '''
+    YUV[:, :, 0] (Y通道)
+    YUV[:, :, 1] (U通道)
+    YUV[:, :, 2] (V通道)
+    因為我們要取U和V的資料進行加128的處理所以寫成[:, :, 1:]是要將U和V的通道都被選取起來並進行處理
+    '''
+    return YUV
 
 def Cut_YUV(YUV):
     (Y1,U1,V1) = cv2.split(YUV) #將YUV分割成3種顏色矩陣(Y1,U1,V1)可以用於看出與以下的差別

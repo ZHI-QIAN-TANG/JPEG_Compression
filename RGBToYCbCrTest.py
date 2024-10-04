@@ -14,10 +14,10 @@ def ConvertRGBToYCbCr(img):
     for x in range(width):
         for y in range(height):
             r, g, b = image[y, x]
+            # print(r,g,b)
             # 计算 YCbCr 通道的值
             Y = 0.299 * r + 0.587 * g + 0.114 * b
             Cb = -0.168736 * r - 0.331264 * g + 0.5 * b + 128
-           
             Cr = 0.5 * r - 0.418688 * g - 0.081312 * b + 128
             
             # 确保在 0-255 范围内

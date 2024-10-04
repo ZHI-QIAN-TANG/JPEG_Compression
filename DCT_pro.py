@@ -65,7 +65,6 @@ def DCT(matrix):
 def IDCT(dct_matrix):
     return idct(idct(dct_matrix.T, norm='ortho').T, norm='ortho')
 
-
 '''
 import numpy as np
 import math
