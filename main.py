@@ -98,6 +98,7 @@ import AC_DC_tree_DHT
 import header as h
 # import Huffman_coding_cf as t
 import Huffman_coding_cf as t
+import DownSample as DS
 
 '''
 image_path = "test2.jpg" # 將圖像進行導入
@@ -200,7 +201,7 @@ def generate_encoded_data(image_path):
         """
 
         Y, Cb, Cr = RGBToYCbCrTest.ConvertRGBToYCbCr(img)
-
+        width,height = Y.shape
         DCTY = DCT.DCT(Y)
         DCTCb = DCT.DCT(Cb)
         DCTCr = DCT.DCT(Cr)
@@ -259,7 +260,7 @@ def generate_encoded_data(image_path):
     print("6:",V_DC_encoded_data_bytes,"\n")
     '''
     # return  Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,encoded_bytes
-    return encoded_bytes
+    return encoded_bytes,width,height
 
     #print("ac_merged_encoded_data" , ac_merged_encoded_data)
 
@@ -292,16 +293,16 @@ def write_jpeg_file(encoded_data, output_file):
 '''
 
 def main():    
-    image_path = "Sred_RDjpg.jpg"
+    image_path = "SRed_RDjpg.jpg"
     output_jpeg = "output1.jpg"
 
     # Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,
-    encoded_bytes = generate_encoded_data(image_path)
+    encoded_bytes,width,height = generate_encoded_data(image_path)
     
     #print(h.save_jpeg_header(output_jpeg, 400, 600,,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs))
     #generate_encoded_data(image_path)
     
-    header = h.generate_jpeg_header(8,8, encoded_bytes)
+    header = h.generate_jpeg_header(width,height, encoded_bytes)
     with open(output_jpeg, 'wb') as f:
         print("start encode")
         f.write(header)
