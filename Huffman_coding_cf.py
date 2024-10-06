@@ -2,7 +2,12 @@ import bitstring
 import codecs
 import math
 
+<<<<<<< HEAD
 def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data,mcu_size=(1,1,1)):
+=======
+def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data):
+    
+>>>>>>> a031227ddf9630918af50e25f6c02fa2ab29ee7d
     # print('Y_DC_data',Y_DC_data)
     # print('U_DC_data',U_DC_data)
     # print('V_DC_data',V_DC_data)
@@ -413,6 +418,7 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data,m
     
     def encode_ac(block, table):
         encoded = ""
+<<<<<<< HEAD
         for run, value in block:
             if value == 0:
                 if run == 0:  # EOB
@@ -430,6 +436,28 @@ def Huffman_coding(Y_DC_data,U_DC_data,V_DC_data,Y_AC_data,U_AC_data,V_AC_data,m
                     inverted_binary = ''.join('1' if b == '0' else '0' for b in binary_rep)
                     encoded += inverted_binary
         return encoded
+=======
+        for block in data:
+            for run, value in block:
+                #print(block)
+                if value == 0:
+                    if run == 0: # EOB 
+                        encoded += table[(0, 0)]
+                        break
+                    else : # ZRL
+                        encoded += table[(15, 0)] 
+                else :
+                    category = min(10, len(bin(abs(value))[2:]))
+                    encoded += table[(run, category)]
+                    if value > 0:
+                        encoded += bin(value)[2:].zfill(category)
+                    else:
+                        binary_rep = bin(abs(value))[2:].zfill(category)  # 取得絕對值的二進制表示
+                        inverted_binary = ''.join('1' if b == '0' else '0' for b in binary_rep)  # 位元反轉
+                        encoded += inverted_binary
+                #print(encoded)
+        return encoded 
+>>>>>>> a031227ddf9630918af50e25f6c02fa2ab29ee7d
 
     def bitstream_to_bytes(bitstream):
         """

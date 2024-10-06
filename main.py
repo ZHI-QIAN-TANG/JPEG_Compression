@@ -98,6 +98,7 @@ import AC_DC_tree_DHT
 import header as h
 # import Huffman_coding_cf as t
 import Huffman_coding_cf as t
+import DownSample as DS
 
 '''
 image_path = "test2.jpg" # 將圖像進行導入
@@ -181,7 +182,7 @@ print("Decoded AC Coefficients:", decoded_ac_coeffs,'\n')
 
 def generate_encoded_data(image_path):
     print(f"Processing image: {image_path}")
-    blocks = crop.crop_image_into_8x8_blocks(image_path)
+    blocks,width, height = crop.crop_image_into_8x8_blocks(image_path)
     URLs = []
     UDCs = []
     
@@ -204,7 +205,7 @@ def generate_encoded_data(image_path):
         DCTY = DCT.DCT(Y)
         DCTCb = DCT.DCT(Cb)
         DCTCr = DCT.DCT(Cr)
-        
+
         QY = Q.YQuantization(DCTY)
         QCb = Q.CbCrQuantization(DCTCb)
         QCr = Q.CbCrQuantization(DCTCr)
@@ -215,6 +216,7 @@ def generate_encoded_data(image_path):
         YAC = Z.Zigzag(QY.tolist())
         CbAC = Z.Zigzag(QCb.tolist())
         CrAC = Z.Zigzag(QCr.tolist())
+
         YAC = YAC[1:]
         CbAC = CbAC[1:]
         CrAC = CrAC[1:]
@@ -231,11 +233,10 @@ def generate_encoded_data(image_path):
         VDCs.append(QCr[0][0])
         VRLs.append(VRL)
 
-    
+
     YDPCM = DPCM.DPCM(YDCs)
     UDPCM = DPCM.DPCM(UDCs)
     VDPCM = DPCM.DPCM(VDCs)
-
     # dc_jpeg_header, dc_merged_encoded_data = Huffman_coding_dc.Huffman_code(YDPCM,UDPCM,VDPCM)
     # #print("dc_jpeg_header" , dc_jpeg_header)
     # #print("dc_merged_encoded_data" , dc_merged_encoded_data)
@@ -259,7 +260,7 @@ def generate_encoded_data(image_path):
     print("6:",V_DC_encoded_data_bytes,"\n")
     '''
     # return  Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,encoded_bytes
-    return encoded_bytes
+    return encoded_bytes,width, height
 
     #print("ac_merged_encoded_data" , ac_merged_encoded_data)
 
@@ -292,6 +293,7 @@ def write_jpeg_file(encoded_data, output_file):
 '''
 
 def main():    
+<<<<<<< HEAD
     image_path = "SPink16-16.jpg"
     output_jpeg = "output1.jpg"
 
@@ -301,6 +303,18 @@ def main():
     #generate_encoded_data(image_path)
     
     header = h.generate_jpeg_header(16,16, encoded_bytes)
+=======
+    image_path = "test2.jpg"
+    output_jpeg = "output2.jpg"
+
+    # Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,
+    encoded_bytes,width, height = generate_encoded_data(image_path)
+    
+    #print(h.save_jpeg_header(output_jpeg, 400, 600,,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs))
+    #generate_encoded_data(image_path)
+    
+    header = h.generate_jpeg_header(width,height, encoded_bytes)
+>>>>>>> a031227ddf9630918af50e25f6c02fa2ab29ee7d
     with open(output_jpeg, 'wb') as f:
         print("start encode")
         f.write(header)

@@ -1,4 +1,5 @@
 '''
+#1
 import numpy as np
 import math
 
@@ -56,6 +57,8 @@ def IDCT(dct):  # 逆DCT函式
 
     return matrix
 '''
+
+
 #確認答案的部分
 from scipy.fftpack import dct, idct
 
@@ -66,6 +69,7 @@ def IDCT(dct_matrix):
     return idct(idct(dct_matrix.T, norm='ortho').T, norm='ortho')
 
 '''
+#版本2
 import numpy as np
 import math
 import crop 

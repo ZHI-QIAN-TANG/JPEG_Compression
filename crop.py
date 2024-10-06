@@ -11,4 +11,4 @@ def crop_image_into_8x8_blocks(image_path): #將圖片分割成8*8的小塊
             cropped_block = img.crop(box) #透過crop函式切割圖片
             cropped_blocks.append(cropped_block) #將切割完的圖片加入陣列中存儲
     cropped_blocks_np = [np.array(block) for block in cropped_blocks]#將所有圖片轉為numpy的array形式，後續才可做資料處理
-    return cropped_blocks_np
+    return cropped_blocks_np,width, height
