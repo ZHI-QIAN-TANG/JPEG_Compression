@@ -1,4 +1,6 @@
-def DPCM (blocks): #輸入所有8x8的圖塊，能產出DC編碼
+# 差分編碼（Differential Pulse CodeModulation：DPCM），紀錄與上個DC值得差值，產生DC編碼
+# 回傳值為陣列
+def DPCM (blocks): #輸入所有8x8的圖塊
     DCs = []
     for i in range(len(blocks)):
         if i == 0:
