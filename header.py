@@ -121,3 +121,4 @@ def generate_jpeg_header(width, height, encoded_bytes):
 
 # 用例
 #print(save_jpeg_header('headertmp.jpg', 600, 400,dc_jpeg_header, ac_jpeg_header, dc_merged_encoded_data, ac_merged_encoded_data))
+
