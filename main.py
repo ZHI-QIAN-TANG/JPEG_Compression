@@ -86,9 +86,11 @@ if __name__ == "__main__":
 
 
 import numpy as np #用於數值處理
+from PIL import Image # 開啟圖片
 import Convert_RGB_to_YUV
-import RGBToYCbCrTest
+import padding8x8
 import crop
+import RGBToYCbCrTest
 import DCT_pro as DCT
 import Quantization as Q
 import Zigzag as Z
@@ -182,7 +184,10 @@ print("Decoded AC Coefficients:", decoded_ac_coeffs,'\n')
 
 def generate_encoded_data(image_path):
     print(f"Processing image: {image_path}")
-    blocks,width,height = crop.crop_image_into_8x8_blocks(image_path)
+    img = Image.open(image_path)
+    width, height = img.size
+    padding_picture, new_height, new_width = padding8x8.Padding8x8(img)
+    blocks = crop.crop_image_into_8x8_blocks(padding_picture, new_height, new_width)
     URLs = []
     UDCs = []
     
@@ -261,7 +266,7 @@ def generate_encoded_data(image_path):
     '''
     # return  Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,encoded_bytes
     
-    return encoded_bytes,width,height
+    return encoded_bytes, width, height
 
     #print("ac_merged_encoded_data" , ac_merged_encoded_data)
 
@@ -294,16 +299,16 @@ def write_jpeg_file(encoded_data, output_file):
 '''
 
 def main():    
-    image_path = "test2.jpg"
+    image_path = "test511x340.jpeg"
     output_jpeg = "output1.jpg"
 
     # Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,
-    encoded_bytes,width,height = generate_encoded_data(image_path)
+    encoded_bytes, width, height = generate_encoded_data(image_path)
     
     #print(h.save_jpeg_header(output_jpeg, 400, 600,,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs))
     #generate_encoded_data(image_path)
     
-    header = h.generate_jpeg_header(width,height, encoded_bytes)
+    header = h.generate_jpeg_header(width, height, encoded_bytes)
     with open(output_jpeg, 'wb') as f:
         print("start encode")
         f.write(header)
