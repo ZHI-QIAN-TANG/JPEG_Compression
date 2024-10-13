@@ -58,7 +58,7 @@ def IDCT(dct):  # 逆DCT函式
     return matrix
 '''
 
-
+'''
 #確認答案的部分
 from scipy.fftpack import dct, idct
 
@@ -67,71 +67,74 @@ def DCT(matrix):
 
 def IDCT(dct_matrix):
     return idct(idct(dct_matrix.T, norm='ortho').T, norm='ortho')
-
 '''
-#版本2
+
 import numpy as np
 import math
-import crop 
 
-"""
-    只要呼叫DCT()就好，其餘是計算過程        
-"""
+def dct_1d(vector):
+    N = len(vector)
+    result = np.zeros_like(vector, dtype=float)
+    factor = math.pi / (2 * N)
 
-def DCT_process(matrix, i, j):#DCT公式
-    width = matrix.shape[1]
-    height = matrix.shape[0]
-    value = 0.
-    for col in range(height):
-       for row in range(width):
-           save = matrix[col, row] 
-           save *= math.cos(math.pi * (2 * col + 1) * i / (2. * height))
-           save *= math.cos(math.pi * (2 * row + 1) * j / (2. * width))
-           value += save
-    c = 1.
-    if i == 0:
-        c /= np.sqrt(2)
-    if j == 0:
-        c /= np.sqrt(2)
+    for k in range(N):
+        if k == 0:
+            c_k = 1 / math.sqrt(2)
+        else:
+            c_k = 1
 
-    return (2. / np.sqrt(height * width)) * c * value
+        sum_value = 0
+        for n in range(N):
+            sum_value += vector[n] * math.cos((2 * n + 1) * k * factor)
 
-def DCT(matrix):#主要被呼叫的DCT函式
-    width = matrix.shape[1]
-    height = matrix.shape[0]
-    dct = np.zeros_like(matrix)
+        result[k] = c_k * sum_value * math.sqrt(2 / N)
 
-    for col in range(height):
-        for row in range(width):
-           dct[col, row] = DCT_process(matrix, col, row)
+    return result
+
+def DCT(matrix):
+    height, width = matrix.shape
+    # Step 1: Apply DCT to each row
+    temp = np.zeros_like(matrix, dtype=float)
+    for i in range(height):
+        temp[i, :] = dct_1d(matrix[i, :])
     
-    return dct
+    # Step 2: Apply DCT to each column
+    result = np.zeros_like(matrix, dtype=float)
+    for j in range(width):
+        result[:, j] = dct_1d(temp[:, j])
+    
+    return result
 
-def IDCT_process(dct, i, j):#逆DCT公式
-   width = dct.shape[1]
-   height = dct.shape[0]
-   value = 0
+def idct_1d(vector):
+    N = len(vector)
+    result = np.zeros_like(vector, dtype=float)
+    factor = math.pi / (2 * N)
 
-   for col in range(height):
-       for row in range(width):
-           save = dct[col, row] 
-           if col == 0:
-               save /= np.sqrt(2)
-           if row == 0:
-               save /= np.sqrt(2)
-           save *= math.cos(math.pi * (2 * i + 1) * col / (2. * height))
-           save *= math.cos(math.pi * (2 * j + 1) * row / (2. * width))
-           value += save
+    for n in range(N):
+        sum_value = 0
+        for k in range(N):
+            if k == 0:
+                c_k = 1 / math.sqrt(2)
+            else:
+                c_k = 1
 
-   return (2. / np.sqrt(height * width)) * value
+            sum_value += c_k * vector[k] * math.cos((2 * n + 1) * k * factor)
 
-def IDCT(dct):#逆DCT函式
-   width = dct.shape[1]
-   height = dct.shape[0]
-   matrix = np.zeros_like(dct)
+        result[n] = sum_value * math.sqrt(2 / N)
 
-   for col in range(height):
-       for row in range(width):
-           matrix[col, row] = IDCT_process(dct, col, row)
-   return matrix
-'''
+    return result
+
+def idct_2d(matrix):
+    height, width = matrix.shape
+    # Step 1: Apply IDCT to each column
+    temp = np.zeros_like(matrix, dtype=float)
+    for j in range(width):
+        temp[:, j] = idct_1d(matrix[:, j])
+    
+    # Step 2: Apply IDCT to each row
+    result = np.zeros_like(matrix, dtype=float)
+    for i in range(height):
+        result[i, :] = idct_1d(temp[i, :])
+    
+    return result
+
