@@ -13,7 +13,7 @@ def ConvertRGBToYCbCr(img):
     # RGB 到 YCbCr 转换公式
     for x in range(width):
         for y in range(height):
-            r, g, b = image[y, x]
+            r, g, b = image[y, x][:3]
             # print(r,g,b)
             # 计算 YCbCr 通道的值
             Y = 0.299 * r + 0.587 * g + 0.114 * b

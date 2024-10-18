@@ -1,9 +1,10 @@
 import numpy as np
-
 def Padding8x8(image): # 將輸入進來的圖片大小一律擴充成8的倍數
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
     image_array = np.array(image)
     height, width, channels = image_array.shape
-
+    
     # 計算補零所需的大小
     pad_height = (8 - (height % 8)) % 8
     pad_width = (8 - (width % 8)) % 8
