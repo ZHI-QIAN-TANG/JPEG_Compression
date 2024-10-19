@@ -104,7 +104,18 @@ print(generate_dht_segment(x, table_class=0, table_id=0))
 
 print(generate_dht_segment(y, table_class=0, table_id=0))
 '''
+import numpy as np
 
+# 測試
+src = np.random.randint(-128, 127, (3, 3)) # 假設 src 是隨機生成的 8x8 矩陣
+print("輸入矩陣:\n", src)
+a =  [[ -44, -47,-119],
+    [-125 , 108 , -53],
+ [ -11  , 81 , 107]]
+
+for i in range(len(a)):
+    print("----------")
+    print(a[i][:])
 
 
 

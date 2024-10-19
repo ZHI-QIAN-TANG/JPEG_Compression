@@ -101,6 +101,7 @@ import header as h
 # import Huffman_coding_cf as t
 import Huffman_coding_cf as t
 import DownSample as DS
+import time
 
 '''
 image_path = "test2.jpg" # 將圖像進行導入
@@ -299,10 +300,11 @@ def write_jpeg_file(encoded_data, output_file):
 '''
 
 def main():    
-    image_path = "test1119-1902PNG.png"
+    image_path = "test2.jpg"
     output_jpeg = "output1.jpg"
 
     # Y_AC_codebook_bytes,UV_AC_codebook_bytes,Y_DC_codebook_bytes,UV_DC_codebook_bytes,encoded_bytes_Y_DC,encoded_bytes_U_DC,encoded_bytes_V_DC,encoded_bytes_Y_AC,encoded_bytes_U_AC,encoded_bytes_V_AC,
+    start_time = time.time()
     encoded_bytes, width, height = generate_encoded_data(image_path)
     
     #print(h.save_jpeg_header(output_jpeg, 400, 600,,YDPCM,UDPCM,VDPCM,YRLs,URLs,VRLs))
@@ -312,8 +314,10 @@ def main():
     with open(output_jpeg, 'wb') as f:
         print("start encode")
         f.write(header)
+        end_time = time.time()
         print("end encode")
-    
+    execution_time = end_time - start_time
+    print(f"process time: {execution_time:.2f} sec")
 
 if __name__ == "__main__":
     main()
