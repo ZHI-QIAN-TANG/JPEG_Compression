@@ -1,52 +1,30 @@
-def Zigzag(blocks) :
-    i = 0
-    j = 0
-    flag = 0 #用來判斷該朝甚麼方向走的旗子，0代表向右走，1代表向左下走，2代表向下走，3代表向右上走
-    ACs = []
+# 將二維數據轉成一維數據
+# 透過斜線掃描方式，針對每行斜線用索引值轉換方向，單數向左下，雙數往右上
+# 將掃描到的數值依序填入一維陣列中，形成一維資料
 
-    for _ in range(63): #因實際情況為且切割成8*8而非3*3，因此實際情況3*3替換成8*8
-        #用除4的餘數讓flag一直在0~3內循環
-        flag %= 4
-        #向右走
-        if flag == 0:
-            j += 1
-            #如果超出右邊範圍，則改為向下走
-            if j == 8: #實際情況j = 3替換成j = 8
-                j -= 1
-                i += 1
-            ACs.append(blocks[i][j])
-            flag += 1
-            continue
-        
-        #向左下走
-        if flag == 1:
-            i += 1
-            j -= 1
-            ACs.append(blocks[i][j])
-            #走到底後flag +1
-            if i == 7 or j == 0: #實際情況i = 2替換成i = 8
-                flag += 1
-            continue
-
-        #向下走
-        if flag == 2:
-            i += 1
-            #如果超出底邊範圍，則改為向右走
-            if i == 8: #實際情況i = 3替換成i = 8
-                i -= 1
-                j += 1
-            ACs.append(blocks[i][j])
-            flag += 1
-            continue
-
-        #向右上走
-        if flag == 3:
-            i -= 1
-            j += 1
-            ACs.append(blocks[i][j])
-            #走到底後flag +1
-            if i == 0 or j == 7: #實際情況j = 2替換成j = 8
-                flag += 1
-            continue
+def Zigzag(block):
+    # 寬高皆為 8
+    h = 8
+    w = 8
+    result = []
     
-    return ACs
+    bound = h + w - 1 # 總共15條斜線
+    for i in range(bound):
+        if i % 2 == 0:
+            x = min(i, h - 1)
+            y = i - x
+            while x >= 0 and y < w:
+                result.append(block[x][y])
+                x -= 1
+                y += 1
+        else:
+            y = min(i, w - 1)
+            x = i - y
+            while y >= 0 and x < h:
+                result.append(block[x][y])
+                y -= 1
+                x += 1
+    
+    return result
+
+# 對量化後的 8x8 區塊進行 Zigzag 掃描
