@@ -1,7 +1,8 @@
 import numpy as np
 
-def ConvertRGBToYCbCr(image): # image是一個numpy数组
+def ConvertRGBToYCbCr(img):
 # 加载图片并获取像素数据
+    image = img  # img现在是一个numpy数组
     height, width, _ = image.shape
 
     # 初始化用于存储 Y, U, V 通道值的数组

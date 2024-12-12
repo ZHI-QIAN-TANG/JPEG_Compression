@@ -1,7 +1,16 @@
-def Huffman_coding(Y1DPCM, Y2DPCM, Y3DPCM, Y4DPCM, 
-                   CbDPCM, CrDPCM, 
-                   Y1RLs, Y2RLs, Y3RLs, Y4RLs, 
-                   CbRLs, CrRLs):
+import bitstring
+import codecs
+import math
+
+def Huffman_coding(Y1DPCM, Y2DPCM, Y3DPCM, Y4DPCM, CbDPCM, CrDPCM, 
+                  Y1RLs, Y2RLs, Y3RLs, Y4RLs, CbRLs, CrRLs):
+    # print('Y_DC_data',Y_DC_data)
+    # print('U_DC_data',U_DC_data)
+    # print('V_DC_data',V_DC_data)
+    # print('Y_AC_data',Y_AC_data)
+    # print('U_AC_data',U_AC_data)
+    # print('V_AC_data',V_AC_data)
+
     # DC 亮度表
     dc_luminance = {
     0: '00',
@@ -367,6 +376,7 @@ def Huffman_coding(Y1DPCM, Y2DPCM, Y3DPCM, Y4DPCM,
     }
 
     def encode_dc(value, prev, table):
+        """Encode DC coefficient using DPCM"""
         diff = value - prev
         category = min(11, len(bin(abs(diff))[2:]) if diff != 0 else 0)
         encoded = table[category]
@@ -380,7 +390,12 @@ def Huffman_coding(Y1DPCM, Y2DPCM, Y3DPCM, Y4DPCM,
         return encoded
 
     def encode_ac(block, table):
+        """Encode AC coefficients using run-length encoding"""
         encoded = ""
+        if not block:  # 如果區塊為空，添加EOB
+            encoded += table[(0, 0)]
+            return encoded
+            
         for run, value in block:
             if value == 0:
                 if run == 0:  # EOB
@@ -400,51 +415,70 @@ def Huffman_coding(Y1DPCM, Y2DPCM, Y3DPCM, Y4DPCM,
         return encoded
 
     def bitstream_to_bytes(bitstream):
-        padding_length = (8 - len(bitstream) % 8) % 8
-        bitstream_padded = bitstream + '1' * padding_length
+        """Convert bitstream to bytes with stuffing but without padding"""
         bytes_data = bytearray()
-        for i in range(0, len(bitstream_padded), 8):
-            byte_value = int(bitstream_padded[i:i+8], 2)
+        # 確保位流長度是8的倍數
+        if len(bitstream) % 8 != 0:
+            remaining_bits = 8 - (len(bitstream) % 8)
+            bitstream += '1' + '0' * (remaining_bits - 1)
+
+        for i in range(0, len(bitstream), 8):
+            byte_str = bitstream[i:i+8]
+            byte_value = int(byte_str, 2)
             bytes_data.append(byte_value)
             if byte_value == 0xFF:
                 bytes_data.append(0x00)
+
         return bytes_data
 
-    # 合併所有編碼數據
+    # 初始化所有分量的 DC 預測值
+    y_prev = 0
+    cb_prev = 0 
+    cr_prev = 0
+
     all_encoded_data = ""
-    y_prev, u_prev, v_prev = 0, 0, 0  # 初始化 DC 預測值
-    y_count, u_count, v_count = 0, 0, 0  # 用於跟踪每個分量在當前 MCU 中的位置
+    
+    # 對每個可用的MCU進行編碼
+    mcu_count = max(len(Y1DPCM), len(Y2DPCM), len(Y3DPCM), len(Y4DPCM), 
+                    len(CbDPCM), len(CrDPCM))
+    
+    for i in range(mcu_count):
+        # 編碼 Y 區塊，只處理有數據的部分
+        y_blocks = [
+            (Y1DPCM[i], Y1RLs[i]) if i < len(Y1DPCM) else None,
+            (Y2DPCM[i], Y2RLs[i]) if i < len(Y2DPCM) else None,
+            (Y3DPCM[i], Y3RLs[i]) if i < len(Y3DPCM) else None,
+            (Y4DPCM[i], Y4RLs[i]) if i < len(Y4DPCM) else None
+        ]
+        
+        # 處理每個Y區塊
+        for y_block in y_blocks:
+            if y_block is not None:
+                y_dc, y_ac = y_block
+                # DC 編碼
+                dc_encoded = encode_dc(y_dc, y_prev, dc_luminance)
+                all_encoded_data += dc_encoded
+                y_prev = y_dc
+                
+                # AC 編碼
+                ac_encoded = encode_ac(y_ac, ac_luminance)
+                all_encoded_data += ac_encoded
 
+        # 編碼 Cb 區塊
+        if i < len(CbDPCM):
+            cb_dc_encoded = encode_dc(CbDPCM[i], cb_prev, dc_chrominance)
+            all_encoded_data += cb_dc_encoded
+            cb_prev = CbDPCM[i]
+            all_encoded_data += encode_ac(CbRLs[i], ac_chrominance)
 
-    for i in range(max(len(Y1DPCM), len(Y2DPCM), len(Y3DPCM), len(Y4DPCM), len(CbDPCM), len(CrDPCM))):
-        if i < len(Y_DC_data):
-            if y_count % mcu_size[0] == 0 and y_count != 0:
-                y_prev = 0  # 重置 Y 的 DC 預測值
-            y_dc_encoded = encode_dc(Y_DC_data[i], y_prev, dc_luminance)
-            all_encoded_data += y_dc_encoded
-            y_prev = Y_DC_data[i]
-            y_count += 1
-        if i < len(Y_AC_data):
-            all_encoded_data += encode_ac(Y_AC_data[i], ac_luminance)
-        if i < len(U_DC_data):
-            if u_count % mcu_size[1] == 0 and u_count != 0:
-                u_prev = 0  # 重置 U 的 DC 預測值
-            u_dc_encoded = encode_dc(U_DC_data[i], u_prev, dc_chrominance)
-            all_encoded_data += u_dc_encoded
-            u_prev = U_DC_data[i]
-            u_count += 1
-        if i < len(U_AC_data):
-            all_encoded_data += encode_ac(U_AC_data[i], ac_chrominance)
-        if i < len(V_DC_data):
-            if v_count % mcu_size[2] == 0 and v_count != 0:
-                v_prev = 0  # 重置 V 的 DC 預測值
-            v_dc_encoded = encode_dc(V_DC_data[i], v_prev, dc_chrominance)
-            all_encoded_data += v_dc_encoded
-            v_prev = V_DC_data[i]
-            v_count += 1
-        if i < len(V_AC_data):
-            all_encoded_data += encode_ac(V_AC_data[i], ac_chrominance)
+        # 編碼 Cr 區塊
+        if i < len(CrDPCM):
+            cr_dc_encoded = encode_dc(CrDPCM[i], cr_prev, dc_chrominance)
+            all_encoded_data += cr_dc_encoded
+            cr_prev = CrDPCM[i]
+            all_encoded_data += encode_ac(CrRLs[i], ac_chrominance)
 
-    # 轉換為位元組
+    # 轉換為字節
     encoded_bytes = bitstream_to_bytes(all_encoded_data)
+    
     return encoded_bytes

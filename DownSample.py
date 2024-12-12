@@ -1,35 +1,18 @@
 import numpy as np
+def downsample_420(y,cb,cr):
+    cb_downsampled = cb[::2, ::2]
+    cr_downsampled = cr[::2, ::2]
+    return y, cb_downsampled, cr_downsampled
 
-def downsample_8x8_to_4x4(matrix):
-    # 初始化一個 4x4 矩陣
-    result = [[0] * 4 for _ in range(4)]
+# 3. 將降採樣後的數據重新拼接
+def upsample_and_merge(y, cb_downsampled, cr_downsampled):
+    # 將 Cb 和 Cr 升採樣回原本大小
+    cb_upsampled = np.repeat(np.repeat(cb_downsampled, 2, axis=0), 2, axis=1)
+    cr_upsampled = np.repeat(np.repeat(cr_downsampled, 2, axis=0), 2, axis=1)
 
-    # 將 8x8 區塊的 2x2 小區域取平均後填入 4x4 區塊
-    for i in range(4):
-        for j in range(4):
-            # 計算對應的 2x2 小區域的起始位置
-            r, c = i * 2, j * 2
-            
-            # 取 2x2 小區域的平均值
-            avg = (matrix[r][c] + matrix[r][c + 1] +
-                   matrix[r + 1][c] + matrix[r + 1][c + 1]) // 4
-            
-            result[i][j] = avg
-
-    return result
-
-def merge_4x4_to_8x8(block1, block2, block3, block4):
-    # 初始化一個 8x8 矩陣
-    result = np.zeros((8, 8), dtype=int)
-
-    # 將 4 個 4x4 區塊依照位置填入 8x8 矩陣
-    result[:4, :4] = block1  # 左上
-    result[:4, 4:] = block2  # 右上
-    result[4:, :4] = block3  # 左下
-    result[4:, 4:] = block4  # 右下
-
-    return result
-
+    # 拼接 Y, Cb, Cr 通道
+    ycbcr_upsampled = np.stack([y, cb_upsampled, cr_upsampled], axis=-1)
+    return ycbcr_upsampled
 
 
 #note
